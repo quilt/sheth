@@ -1,10 +1,48 @@
-//  Merkle tree schema
-//
-//       root
-//     /      \
-//  pubkey [nonce, value]
+use crate::hash::hash;
+use crate::state::Hash;
+use crate::u264::U264;
+use arrayref::array_ref;
+use u256::U256;
+
+///  Merkle tree schema
+///
+///       root
+///     /      \
+///  pubkey [nonce, value]
 pub struct Account {
-    pub pubkey: [u8; 32],
+    pub pubkey: [u8; 48],
     pub nonce: u64,
     pub value: u64,
+}
+
+impl Account {
+    pub fn root(&self) -> Hash {
+        let mut buf = [0u8; 64];
+
+        // Calculate account root
+        buf[0..48].copy_from_slice(&self.pubkey);
+        hash(&mut buf);
+
+        // Put in nonce and value
+        buf[32..40].copy_from_slice(&self.nonce.to_le_bytes());
+        buf[40..48].copy_from_slice(&self.value.to_le_bytes());
+        buf[48..64].copy_from_slice(&[0u8; 16]);
+
+        hash(&mut buf);
+
+        *array_ref![buf, 0, 32]
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct Address(U256);
+
+impl From<Address> for U264 {
+    fn from(address: Address) -> U264 {
+        let n = U264::from(address.0);
+        n + U264([
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 1,
+        ])
+    }
 }

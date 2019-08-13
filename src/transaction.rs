@@ -1,5 +1,7 @@
+use crate::account::Address;
 use crate::error::Error;
 use crate::state::Backend;
+use u256::U256;
 
 pub enum Transaction {
     Transfer(Transfer),
@@ -8,9 +10,9 @@ pub enum Transaction {
 }
 
 impl Transaction {
-    pub fn from(&self) -> &[u8; 32] {
+    pub fn from(&self) -> Address {
         match self {
-            Transaction::Transfer(t) => &t.from,
+            Transaction::Transfer(t) => t.from,
             Transaction::Withdrawal(w) => unimplemented!(),
             Transaction::Deposit(d) => unimplemented!(),
         }
@@ -44,8 +46,8 @@ impl Transaction {
 }
 
 pub struct Transfer {
-    pub to: [u8; 32],
-    pub from: [u8; 32],
+    pub to: Address,
+    pub from: Address,
     pub nonce: u64,
     pub amount: u64,
     pub signature: [u8; 96],

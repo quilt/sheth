@@ -1,14 +1,18 @@
 use crate::error::Error;
-use crate::state::Db;
+use crate::state::Backend;
 use crate::transaction::Transaction;
+use u256::U256;
 
-fn process_transactions<'a>(db: &'a mut Db, transactions: &'a [Transaction]) -> &'a [u8; 32] {
+fn process_transactions<T>(db: &mut T, transactions: &[Transaction]) -> U256
+where
+    T: Backend,
+{
     for tx in transactions {
         if let Err(Error) = tx.verify(db) {
             continue;
         }
 
-        db.inc_nonce(t.from);
+        db.inc_nonce(tx.from());
 
         match tx {
             Transaction::Transfer(t) => {}
@@ -20,7 +24,9 @@ fn process_transactions<'a>(db: &'a mut Db, transactions: &'a [Transaction]) -> 
     unimplemented!();
 }
 
-fn transfer(db: &mut Db, tx: Transaction) -> Result<(), Error> {
-    db.sub_value(t.from, t.amount)?;
-    db.add_value(t.to, t.amount)?;
+fn transfer<T: Backend>(db: &mut T, tx: Transaction) -> Result<(), Error> {
+    // db.sub_value(tx.from, tx.amount)?;
+    // db.add_value(tx.to, tx.amount)?;
+
+    Ok(())
 }
