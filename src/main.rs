@@ -17,22 +17,31 @@ use u264::U264;
 
 fn main() {
     let branch = vec![
-        7, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        11, 0, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 245, 165, 253, 66, 209, 106, 32, 48, 39, 152, 239, 110, 211, 9, 151,
-        155, 67, 0, 61, 35, 32, 217, 240, 232, 234, 152, 49, 169, 39, 89, 251, 75,
+        0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 195, 86,
+        169, 110, 177, 121, 15, 58, 133, 98, 199, 13, 111, 144, 174, 84, 132, 236, 25, 85, 251,
+        220, 228, 101, 75, 111, 42, 177, 146, 186, 203, 153,
     ];
 
     let mut mem = InMemoryBackend::new(2);
@@ -49,7 +58,7 @@ fn main() {
 
     println!("{:?}", mem.db);
 
-    let accounts = vec![
+    let accounts: Vec<Account> = vec![
         Account {
             pubkey: [0u8; 48],
             nonce: 0,
@@ -73,20 +82,17 @@ pub fn generate_proof(accounts: Vec<Account>, height: usize) {
         let index = (U512::one() << height) + i.into();
 
         // Copy the values of the account into a buffer
-        let mut buf = [0u8; 96];
+        let mut buf = [0u8; 128];
         buf[0..48].copy_from_slice(&account.pubkey);
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
-        buf[72..80].copy_from_slice(&account.value.to_le_bytes());
+        buf[96..104].copy_from_slice(&account.value.to_le_bytes());
 
         // Insert children nodes of the account, where structure looks like:
-        //         account_root(1)
-        //         /          \
-        //    pubkey_root(2)   [nonce, value](3)
-        //    /             \
-        // pubkey[0..32](4) pubkey[32..48](5)
-        map.insert(index << 2, *array_ref![buf, 0, 32]);
-        map.insert((index << 2) + 1.into(), *array_ref![buf, 32, 32]);
-        map.insert((index << 1) + 1.into(), *array_ref![buf, 64, 32]);
+        map.insert(index << 3, *array_ref![buf, 0, 32]);
+        map.insert((index << 3) + 1.into(), *array_ref![buf, 32, 32]);
+        map.insert((index << 2) + 1.into(), *array_ref![buf, 64, 32]);
+        map.insert((index << 2) + 2.into(), *array_ref![buf, 96, 32]);
+        map.insert((index << 2) + 3.into(), [0u8; 32]);
     }
 
     let mut indexes: Vec<U512> = map.keys().clone().map(|x| x.to_owned()).collect();
@@ -99,35 +105,13 @@ pub fn generate_proof(accounts: Vec<Account>, height: usize) {
         let right = left + 1.into();
         let parent = left / 2.into();
 
-        // println!("left: {:?}, right: {:?}, parent: {:?}", left, right, parent);
-
         if !map.contains_key(&parent) {
-            // Calculate zero hash for this height
-            let mut buf = [0u8; 64];
-
-            // The zero hash depth is the log2(index), but to avoid any actual log functions we're
-            // just using the `bits()` method. There is an edge case where there is an overflowing
-            // subtraction for the sibling of the `[nonce, value]` leaf of an intialized account.
-            // It must be `[0u8; 32]` *and* two levels above where the accounts' root hashes are
-            // should resolve to `[0u8; 32]` when an account is unintialized. The only time there
-            // is an overflowing sub is when the sibling node from above is being calculated, so
-            // just return 0 in that instance.
-            let depth = {
-                let (ret, flag) = (height + 1).overflowing_sub(indexes[position].bits());
-
-                if flag {
-                    0
-                } else {
-                    ret
-                }
-            };
-
-            zh(depth, &mut buf);
-
-            let buf = *array_ref![buf, 0, 32];
             let left = match map.get(&left) {
                 Some(x) => *x,
                 None => {
+                    let mut buf = [0u8; 64];
+                    zh((height + 1) - indexes[position].bits(), &mut buf);
+                    let buf = *array_ref![buf, 0, 32];
                     proof_indexes.push(left);
                     map.insert(left, buf);
                     buf
@@ -137,6 +121,9 @@ pub fn generate_proof(accounts: Vec<Account>, height: usize) {
             let right = match map.get(&right) {
                 Some(x) => *x,
                 None => {
+                    let mut buf = [0u8; 64];
+                    zh((height + 1) - indexes[position].bits(), &mut buf);
+                    let buf = *array_ref![buf, 0, 32];
                     proof_indexes.push(right);
                     map.insert(right, buf);
                     buf
@@ -155,15 +142,21 @@ pub fn generate_proof(accounts: Vec<Account>, height: usize) {
 
             // Push parent index to calculate next level
             indexes.push(parent);
+
+            // println!(
+            //     "{} -- {} | {} => {}",
+            //     parent,
+            //     hex::encode(left),
+            //     hex::encode(right),
+            //     hex::encode(h)
+            // );
         }
 
         position += 1;
     }
 
-    println!("root: {:?}", hex::encode(map.get(&1.into()).unwrap()));
     println!("{:?},", &proof_indexes.len().to_le_bytes()[0..4]);
     proof_indexes.sort_by(|a, b| (&b.0).cmp(&a.0));
-    let mut buf = [0u8; 64];
     for i in proof_indexes {
         let data = map.get(&i).unwrap();
         // println!("{:?},", hex::encode(data));

@@ -136,8 +136,8 @@ impl Backend for InMemoryBackend {
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
-        // `nonce_index = account_root * 2 + 1`
-        let key = (U264::one() << (self.height + 1)) + U264::from(address) + 1.into();
+        // `nonce_index = account_root * 4 + 2`
+        let key = (((U264::one() << (self.height)) + U264::from(address)) << 2) + 1.into();
 
         let val = match self.db.get(&key) {
             // If there is a modified chunk, use that. Otherwise use the original value.

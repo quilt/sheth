@@ -8,7 +8,9 @@ use bigint::U256;
 ///
 ///       root
 ///     /      \
-///  pubkey [nonce, value]
+///  pubkey  other_root
+///           /      \
+///         nonce   value
 pub struct Account {
     pub pubkey: [u8; 48],
     pub nonce: u64,
@@ -16,6 +18,7 @@ pub struct Account {
 }
 
 impl Account {
+    // TODO: fix for new structure
     pub fn root(&self) -> Hash256 {
         let mut buf = [0u8; 64];
 
@@ -23,12 +26,28 @@ impl Account {
         buf[0..48].copy_from_slice(&self.pubkey);
         hash(&mut buf);
 
-        // Put in nonce and value
-        buf[32..40].copy_from_slice(&self.nonce.to_le_bytes());
-        buf[40..48].copy_from_slice(&self.value.to_le_bytes());
-        buf[48..64].copy_from_slice(&[0u8; 16]);
+        println!("16: {:?}", hex::encode(&buf[0..32]));
 
+        // hash nonce + pubkey
+        buf[32..40].copy_from_slice(&self.nonce.to_le_bytes());
+        buf[40..64].copy_from_slice(&[0u8; 24]);
         hash(&mut buf);
+
+        println!("8: {:?}", hex::encode(&buf[0..32]));
+
+        // hash value + padding
+        let mut buf2 = [0u8; 64];
+        buf2[0..8].copy_from_slice(&self.value.to_le_bytes());
+        hash(&mut buf2);
+
+        println!("9: {:?}", hex::encode(&buf2[0..32]));
+
+        // hash 8 + 9
+        buf[32..64].copy_from_slice(&buf2[0..32]);
+        hash(&mut buf);
+
+        println!("account root: {:?}", &buf[0..32]);
+        println!("account root: {:?}", hex::encode(&buf[0..32]));
 
         *array_ref![buf, 0, 32]
     }
