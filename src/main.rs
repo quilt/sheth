@@ -35,28 +35,34 @@ fn main() {
         155, 67, 0, 61, 35, 32, 217, 240, 232, 234, 152, 49, 169, 39, 89, 251, 75,
     ];
 
-    let mut mem = InMemoryBackend::new();
+    let mut mem = InMemoryBackend::new(2);
     println!("{:?}", mem.load(&branch));
     println!("{:?}", mem.db.len());
 
     mem.inc_nonce(0.into());
+    let roots = mem.roots().unwrap();
+    println!(
+        "pre_root: {:?}, post_root: {:?}",
+        hex::encode(roots.0),
+        hex::encode(roots.1)
+    );
 
     println!("{:?}", mem.db);
 
-    // let accounts = vec![
-    //     Account {
-    //         pubkey: [0u8; 48],
-    //         nonce: 0,
-    //         value: 0,
-    //     },
-    //     Account {
-    //         pubkey: [0u8; 48],
-    //         nonce: 0,
-    //         value: 0,
-    //     },
-    // ];
+    let accounts = vec![
+        Account {
+            pubkey: [0u8; 48],
+            nonce: 0,
+            value: 0,
+        },
+        Account {
+            pubkey: [0u8; 48],
+            nonce: 0,
+            value: 0,
+        },
+    ];
 
-    // generate_proof(accounts, 2);
+    generate_proof(accounts, 2);
 }
 
 pub fn generate_proof(accounts: Vec<Account>, height: usize) {

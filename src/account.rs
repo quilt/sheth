@@ -45,10 +45,6 @@ impl From<usize> for Address {
 
 impl From<Address> for U264 {
     fn from(address: Address) -> U264 {
-        let n = U264::from(address.0);
-        n + U264([
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 1,
-        ])
+        U264::from(address.0)
     }
 }

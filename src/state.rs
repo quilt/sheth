@@ -1,7 +1,8 @@
 use crate::account::Address;
 use crate::error::Error;
+use crate::hash::hash;
 use crate::u264::U264;
-use arrayref::array_ref;
+use arrayref::{array_mut_ref, array_ref};
 use bigint::U256;
 
 pub type Hash256 = [u8; 32];
@@ -21,7 +22,7 @@ pub type Hash256 = [u8; 32];
 
 /// Interface for interacting with the state's Sparse Merkle Tree.
 pub trait Backend {
-    fn new() -> Self;
+    fn new(height: usize) -> Self;
     /// Loads a serialized proof into storage.
     fn load(&mut self, proof: &[u8]) -> Result<(), Error>;
 
@@ -40,12 +41,14 @@ pub trait Backend {
 
 pub struct InMemoryBackend {
     pub db: std::collections::HashMap<U264, (Hash256, Option<Hash256>)>,
+    pub height: usize,
 }
 
 impl Backend for InMemoryBackend {
-    fn new() -> Self {
+    fn new(height: usize) -> Self {
         Self {
             db: std::collections::HashMap::new(),
+            height,
         }
     }
 
@@ -66,7 +69,6 @@ impl Backend for InMemoryBackend {
             index_buf.copy_from_slice(&input[begin..begin + 33]);
             chunk_buf.copy_from_slice(&input[begin + 33..end]);
             let index = unsafe { std::mem::transmute::<[u8; 33], U264>(index_buf) };
-            println!("i:{}, {:?}", i, index);
             self.db.insert(index, (chunk_buf, None));
         }
 
@@ -74,7 +76,55 @@ impl Backend for InMemoryBackend {
     }
 
     fn roots(&mut self) -> Result<(Hash256, Hash256), Error> {
-        unimplemented!()
+        let mut buf = [0u8; 128];
+        let mut indexes: Vec<U264> = self.db.keys().clone().map(|x| x.to_owned()).collect();
+        indexes.sort_by(|a, b| (b).cmp(a));
+
+        let mut position = 0;
+        while position < indexes.len() {
+            let left = indexes[position] & (!U264::zero() - 1.into());
+            let right = left + 1.into();
+            let parent = left >> 1;
+
+            if self.db.contains_key(&left)
+                && self.db.contains_key(&right)
+                && !self.db.contains_key(&parent)
+            {
+                let left = self.db.get(&left).ok_or(Error::ChunkNotLoaded)?;
+                let right = self.db.get(&right).ok_or(Error::ChunkNotLoaded)?;
+
+                // Grab the unmodified chunks
+                let left0 = left.0;
+                let right0 = right.0;
+
+                // Grab the modified chunks (if they exists, otherwise fall back to unmodified)
+                let left1 = left.1.unwrap_or(left.0);
+                let right1 = right.1.unwrap_or(right.0);
+
+                // Copy chunks into hashing buffer
+                buf[0..32].copy_from_slice(&left0);
+                buf[32..64].copy_from_slice(&right0);
+                buf[64..96].copy_from_slice(&left1);
+                buf[96..128].copy_from_slice(&right1);
+
+                // Hash chunks
+                hash(array_mut_ref![buf, 0, 64]);
+                hash(array_mut_ref![buf, 64, 64]);
+
+                // Insert new hashes into db
+                self.db.insert(
+                    parent,
+                    (*array_ref![buf, 0, 32], Some(*array_ref![buf, 64, 32])),
+                );
+
+                indexes.push(parent);
+            }
+
+            position += 1;
+        }
+
+        let root = self.db.get(&U264::one()).unwrap();
+        Ok((root.0, root.1.unwrap()))
     }
 
     fn add_value(&mut self, amount: u64, address: U256) -> Result<u64, Error> {
@@ -86,7 +136,8 @@ impl Backend for InMemoryBackend {
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
-        let key = (U264::from(address) << 1) + 1;
+        // `nonce_index = account_root * 2 + 1`
+        let key = (U264::one() << (self.height + 1)) + U264::from(address) + 1.into();
 
         let val = match self.db.get(&key) {
             // If there is a modified chunk, use that. Otherwise use the original value.

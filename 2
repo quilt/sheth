@@ -6,14 +6,14 @@ use std::cmp::{Eq, Ordering};
 #[cfg(feature = "std")]
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "std")]
-use std::ops::{Add, BitAnd, Not, Shl, Shr, Sub};
+use std::ops::{Add, BitAnd, Not, Shl, Shr};
 
 #[cfg(not(feature = "std"))]
 use core::cmp::{Eq, Ordering};
 #[cfg(not(feature = "std"))]
 use core::hash::{Hash, Hasher};
 #[cfg(not(feature = "std"))]
-use core::ops::{Add, BitAnd, Not, Shl, Shr, Sub};
+use core::ops::{Add, BitAnd, Not, Shl, Shr};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -167,10 +167,10 @@ impl Add for U264 {
     }
 }
 
-impl Sub for U264 {
+impl Add for U264 {
     type Output = U264;
 
-    fn sub(self, other: U264) -> U264 {
+    fn add(self, other: U264) -> U264 {
         let (o, v) = self.overflowing_sub(other);
         assert!(v == false);
         o
@@ -235,7 +235,7 @@ impl BitAnd for U264 {
         let (me_1, me_2, me_3, me_4, me_5) = array_refs!(me, 8, 8, 8, 8, 1);
         let (you_1, you_2, you_3, you_4, you_5) = array_refs!(you, 8, 8, 8, 8, 1);
 
-        let mut ret = [0u8; 33];
+        let ret = [0u8; 33];
         ret[0..8].copy_from_slice(
             &(u64::from_le_bytes(*me_1) & u64::from_le_bytes(*you_1)).to_le_bytes(),
         );
@@ -263,7 +263,7 @@ impl Not for U264 {
 
         let (me_1, me_2, me_3, me_4, me_5) = array_refs!(me, 8, 8, 8, 8, 1);
 
-        let mut ret = [0u8; 33];
+        let ret = [0u8; 33];
         ret[0..8].copy_from_slice(&(!u64::from_le_bytes(*me_1)).to_le_bytes());
         ret[8..16].copy_from_slice(&(!u64::from_le_bytes(*me_2)).to_le_bytes());
         ret[16..24].copy_from_slice(&(!u64::from_le_bytes(*me_3)).to_le_bytes());
