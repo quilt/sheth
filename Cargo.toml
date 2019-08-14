@@ -5,9 +5,10 @@ authors = ["Matt Garnett <14004106+lightclient@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
-u256 = "0.1.0"
 arrayref = "0.3.5"
 sha2 = "0.8.0"
+bigint = "4.4.1"
+hex = "0.3.2"
 
 [features]
 default = ["std"]

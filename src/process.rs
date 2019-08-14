@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::state::Backend;
 use crate::transaction::Transaction;
-use u256::U256;
+use bigint::U256;
 
 fn process_transactions<T>(db: &mut T, transactions: &[Transaction]) -> U256
 where

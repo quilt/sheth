@@ -1,19 +1,19 @@
 use arrayref::array_refs;
-use u256::U256;
+use bigint::U256;
 
 #[cfg(feature = "std")]
 use std::cmp::{Eq, Ordering};
 #[cfg(feature = "std")]
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "std")]
-use std::ops::{Add, Shr};
+use std::ops::{Add, Shl, Shr};
 
 #[cfg(not(feature = "std"))]
 use core::cmp::{Eq, Ordering};
 #[cfg(not(feature = "std"))]
 use core::hash::{Hash, Hasher};
 #[cfg(not(feature = "std"))]
-use core::ops::{Add, Shr};
+use core::ops::{Add, Shl, Shr};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -127,6 +127,30 @@ impl Shr<usize> for U264 {
             // Carry
             if bit_shift > 0 && i < 33 - 1 {
                 ret[i - word_shift] += original[i + 1] << (8 - bit_shift);
+            }
+        }
+
+        U264(ret)
+    }
+}
+
+impl Shl<usize> for U264 {
+    type Output = U264;
+
+    fn shl(self, shift: usize) -> U264 {
+        let U264(ref original) = self;
+        let (me_1, me_2, me_3, me_4, me_5) = array_refs!(original, 8, 8, 8, 8, 1);
+        let mut ret = [0u8; 33];
+
+        let word_shift = shift / 1;
+        let bit_shift = shift % 1;
+
+        for i in word_shift..33 {
+            // Shift
+            ret[i - word_shift] += original[i] << bit_shift;
+            // Carry
+            if bit_shift > 0 && i < 33 - 1 {
+                ret[i - word_shift] += original[i + 1] >> (8 - bit_shift);
             }
         }
 

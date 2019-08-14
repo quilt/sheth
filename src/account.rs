@@ -1,8 +1,8 @@
 use crate::hash::hash;
-use crate::state::Hash;
+use crate::state::Hash256;
 use crate::u264::U264;
 use arrayref::array_ref;
-use u256::U256;
+use bigint::U256;
 
 ///  Merkle tree schema
 ///
@@ -16,7 +16,7 @@ pub struct Account {
 }
 
 impl Account {
-    pub fn root(&self) -> Hash {
+    pub fn root(&self) -> Hash256 {
         let mut buf = [0u8; 64];
 
         // Calculate account root
@@ -34,8 +34,14 @@ impl Account {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Address(U256);
+
+impl From<usize> for Address {
+    fn from(n: usize) -> Address {
+        Address(n.into())
+    }
+}
 
 impl From<Address> for U264 {
     fn from(address: Address) -> U264 {
