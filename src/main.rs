@@ -49,6 +49,9 @@ fn main() {
     println!("{:?}", mem.db.len());
 
     mem.inc_nonce(0.into());
+    mem.inc_nonce(0.into());
+    mem.inc_nonce(1.into()).unwrap();
+
     let roots = mem.roots().unwrap();
     println!(
         "pre_root: {:?}, post_root: {:?}",
@@ -56,7 +59,7 @@ fn main() {
         hex::encode(roots.1)
     );
 
-    println!("{:?}", mem.db);
+    // println!("{:?}", mem.db);
 
     let accounts: Vec<Account> = vec![
         Account {
@@ -71,7 +74,7 @@ fn main() {
         },
     ];
 
-    generate_proof(accounts, 2);
+    // generate_proof(accounts, 2);
 }
 
 pub fn generate_proof(accounts: Vec<Account>, height: usize) {

@@ -111,6 +111,16 @@ impl Backend for InMemoryBackend {
                 hash(array_mut_ref![buf, 0, 64]);
                 hash(array_mut_ref![buf, 64, 64]);
 
+                println!(
+                    "({}, {}) | ({}, {}) => ({}, {})",
+                    hex::encode(left0),
+                    hex::encode(right0),
+                    hex::encode(left1),
+                    hex::encode(right1),
+                    hex::encode(array_ref![buf, 0, 32]),
+                    hex::encode(array_ref![buf, 64, 32]),
+                );
+
                 // Insert new hashes into db
                 self.db.insert(
                     parent,
@@ -136,16 +146,17 @@ impl Backend for InMemoryBackend {
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
-        // `nonce_index = account_root * 4 + 2`
-        let key = (((U264::one() << (self.height)) + U264::from(address)) << 2) + 1.into();
+        // `nonce_index = (first_leaf + account) * 4 + 2`
+        let key = (((U264::one() << self.height) + address.into()) << 2) + 1.into();
+        println!("ay key: {:?}", key);
 
         let val = match self.db.get(&key) {
             // If there is a modified chunk, use that. Otherwise use the original value.
-            Some(n) => n.1.unwrap_or(n.0),
+            Some(n) => (n.0, n.1.unwrap_or(n.0)),
             None => return Err(Error::ChunkNotLoaded),
         };
 
-        let nonce = u64::from_le_bytes(*array_ref![val, 0, 8]);
+        let nonce = u64::from_le_bytes(*array_ref![val.1, 0, 8]);
 
         let (nonce, overflow) = nonce.overflowing_add(1);
         if overflow {
@@ -155,7 +166,7 @@ impl Backend for InMemoryBackend {
         let mut nonce_buf = [0u8; 32];
         nonce_buf[0..8].copy_from_slice(&nonce.to_le_bytes());
 
-        self.db.insert(key, (val, Some(nonce_buf)));
+        self.db.insert(key, (val.0, Some(nonce_buf)));
 
         Ok(nonce)
     }

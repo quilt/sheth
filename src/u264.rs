@@ -372,7 +372,7 @@ impl Hash for U264 {
 impl From<U256> for U264 {
     fn from(n: U256) -> U264 {
         let mut buf = [0u8; 33];
-        n.to_big_endian(&mut buf[0..32]);
+        n.to_little_endian(&mut buf[0..32]);
         U264::from(buf)
     }
 }
