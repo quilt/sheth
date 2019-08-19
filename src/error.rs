@@ -1,8 +1,10 @@
-#[derive(Debug)]
+use crate::U264;
+
+#[derive(Debug, PartialEq)]
 pub enum Error {
     SignatureInvalid,
     NonceInvalid,
     BalanceInsufficient,
-    ChunkNotLoaded,
+    ChunkNotLoaded(U264),
     Overflow,
 }

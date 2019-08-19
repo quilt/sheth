@@ -4,12 +4,16 @@ use bigint::U256;
 #[cfg(feature = "std")]
 use std::cmp::{Eq, Ordering};
 #[cfg(feature = "std")]
+use std::fmt;
+#[cfg(feature = "std")]
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "std")]
 use std::ops::{Add, BitAnd, Not, Shl, Shr, Sub};
 
 #[cfg(not(feature = "std"))]
 use core::cmp::{Eq, Ordering};
+#[cfg(not(feature = "std"))]
+use core::fmt;
 #[cfg(not(feature = "std"))]
 use core::hash::{Hash, Hasher};
 #[cfg(not(feature = "std"))]
@@ -392,9 +396,14 @@ impl From<[u8; 33]> for U264 {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::fmt::Debug for U264 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl From<U264> for [u8; 33] {
+    fn from(n: U264) -> [u8; 33] {
+        n.0
+    }
+}
+
+impl fmt::Debug for U264 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", &self.0[..])
     }
 }

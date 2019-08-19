@@ -1,0 +1,10 @@
+transfer:
+  file: "target/wasm32-unknown-unknown/release/simple_transfer.wasm"
+  trimexports:
+    preset: "ewasm"
+  verifyexports:
+    preset: "ewasm"
+  repack:
+    preset: "ewasm"
+  snip: 
+    preset: "ewasm"

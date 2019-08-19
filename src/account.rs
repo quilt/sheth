@@ -4,7 +4,7 @@ use crate::u264::U264;
 use arrayref::array_ref;
 use bigint::U256;
 
-///  Merkle tree schema
+///  Account merkle tree schema:
 ///
 ///       root
 ///     /      \
@@ -18,7 +18,6 @@ pub struct Account {
 }
 
 impl Account {
-    // TODO: fix for new structure
     pub fn root(&self) -> Hash256 {
         let mut buf = [0u8; 64];
 
@@ -26,28 +25,19 @@ impl Account {
         buf[0..48].copy_from_slice(&self.pubkey);
         hash(&mut buf);
 
-        println!("16: {:?}", hex::encode(&buf[0..32]));
-
         // hash nonce + pubkey
         buf[32..40].copy_from_slice(&self.nonce.to_le_bytes());
         buf[40..64].copy_from_slice(&[0u8; 24]);
         hash(&mut buf);
-
-        println!("8: {:?}", hex::encode(&buf[0..32]));
 
         // hash value + padding
         let mut buf2 = [0u8; 64];
         buf2[0..8].copy_from_slice(&self.value.to_le_bytes());
         hash(&mut buf2);
 
-        println!("9: {:?}", hex::encode(&buf2[0..32]));
-
         // hash 8 + 9
         buf[32..64].copy_from_slice(&buf2[0..32]);
         hash(&mut buf);
-
-        println!("account root: {:?}", &buf[0..32]);
-        println!("account root: {:?}", hex::encode(&buf[0..32]));
 
         *array_ref![buf, 0, 32]
     }
@@ -62,8 +52,26 @@ impl From<usize> for Address {
     }
 }
 
+impl From<U256> for Address {
+    fn from(n: U256) -> Address {
+        Address(n)
+    }
+}
+
+impl From<[u8; 32]> for Address {
+    fn from(arr: [u8; 32]) -> Address {
+        Address(arr.into())
+    }
+}
+
 impl From<Address> for U264 {
     fn from(address: Address) -> U264 {
         U264::from(address.0)
+    }
+}
+
+impl From<Address> for [u8; 32] {
+    fn from(a: Address) -> [u8; 32] {
+        a.0.into()
     }
 }

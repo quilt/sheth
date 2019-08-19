@@ -4,6 +4,13 @@ version = "0.1.0"
 authors = ["Matt Garnett <14004106+lightclient@users.noreply.github.com>"]
 edition = "2018"
 
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+debug = false
+
 [dependencies]
 arrayref = "0.3.5"
 sha2 = "0.8.0"

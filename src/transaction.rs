@@ -1,7 +1,6 @@
 use crate::account::Address;
 use crate::error::Error;
 use crate::state::Backend;
-use bigint::U256;
 
 pub enum Transaction {
     Transfer(Transfer),
