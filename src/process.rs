@@ -63,7 +63,16 @@ mod test {
         bytes
     }
 
-    fn generate_proof(accounts: &[Account], height: usize) -> Vec<u8> {
+    fn generate_proof(account_count: usize, height: usize) -> Vec<u8> {
+        let accounts: Vec<Account> = vec![
+            Account {
+                pubkey: [0u8; 48],
+                nonce: 0,
+                value: 0,
+            };
+            account_count
+        ];
+
         let mut map: BTreeMap<U512, Hash256> = BTreeMap::new();
 
         for (i, account) in accounts.iter().enumerate() {
@@ -151,21 +160,37 @@ mod test {
         proof
     }
 
+    fn generate_transactions(tx_count: usize, account_count: usize) -> Vec<Transaction> {
+        let mut map: BTreeMap<U256, Account> = BTreeMap::new();
+        let mut transactions: Vec<Transaction> = vec![];
+
+        for i in 0..tx_count {
+            let mut sender = map
+                .get(&((i % account_count).into()))
+                .unwrap_or(&Account {
+                    pubkey: [0u8; 48],
+                    nonce: 0,
+                    value: 0,
+                })
+                .clone();
+
+            transactions.push(Transaction::Transfer(Transfer {
+                to: (i % (account_count - 1)).into(),
+                from: (i % account_count).into(),
+                nonce: sender.nonce,
+                amount: sender.value,
+                signature: [0u8; 96],
+            }));
+
+            sender.nonce += 1;
+            map.insert((1 % account_count).into(), sender);
+        }
+
+        transactions
+    }
+
     #[test]
     fn two_accounts() {
-        let accounts: Vec<Account> = vec![
-            Account {
-                pubkey: [0u8; 48],
-                nonce: 0,
-                value: 0,
-            },
-            Account {
-                pubkey: [0u8; 48],
-                nonce: 0,
-                value: 0,
-            },
-        ];
-
         let transactions = vec![
             Transaction::Transfer(Transfer {
                 to: U256::from(1).into(),
@@ -190,13 +215,13 @@ mod test {
             }),
         ];
 
-        let mut blob = serialize_transactions(&transactions);
-        blob.extend(generate_proof(&accounts, 2));
-        println!("input blob: {}", hex::encode(blob));
+        // let mut blob = serialize_transactions(&transactions);
+        // blob.extend(generate_proof(2, 2));
+        // println!("input blob: {}", hex::encode(blob));
 
         let mut mem = InMemoryBackend::new(2);
 
-        assert_eq!(mem.load(&generate_proof(&accounts, 2)), Ok(()));
+        assert_eq!(mem.load(&generate_proof(2, 2)), Ok(()));
         assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
 
         let roots = mem.roots().unwrap();
@@ -210,5 +235,43 @@ mod test {
             "0f4872fd12bf989de4278622a31cf9e076886484287f6e44ec45879672b4f27c",
             hex::encode(roots.1)
         );
+    }
+
+    #[test]
+    fn larger_tree() {
+        let tx_count = 50;
+        let account_count = 100;
+        let height = 256;
+
+        let transactions = generate_transactions(tx_count, account_count);
+        let proof = generate_proof(tx_count, height);
+
+        let mut input = serialize_transactions(&transactions);
+        input.extend(proof.clone());
+        println!("input len: {}", input.len());
+        println!("input: {}", hex::encode(input));
+
+        let mut mem = InMemoryBackend::new(height);
+
+        assert_eq!(mem.load(&proof), Ok(()));
+        assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
+
+        let roots = mem.roots().unwrap();
+
+        assert_eq!(
+            "36169d2d28c3a8970f6b8bf59f54f4164316e8a3b8083e55c729adb8d014fd3b",
+            hex::encode(roots.0)
+        );
+
+        assert_eq!(
+            "e5e6afd94f0f730e89512ecb7f9398cf053368af904091c7e252cb2bd6b26290",
+            hex::encode(roots.1)
+        );
+
+        // println!(
+        //     "pre: {}, post: {}",
+        //     hex::encode(roots.0),
+        //     hex::encode(roots.1)
+        // );
     }
 }

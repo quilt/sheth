@@ -16,6 +16,7 @@ arrayref = "0.3.5"
 sha2 = "0.8.0"
 bigint = "4.4.1"
 hex = "0.3.2"
+qimalloc = "0.1.0"
 
 [features]
 default = ["std"]

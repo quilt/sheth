@@ -1,5 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg_attr(not(feature = "std"), no_std)]
+static ALLOC: qimalloc::QIMalloc = qimalloc::QIMalloc::INIT;
+
 extern crate alloc;
 
 mod account;
@@ -34,7 +37,7 @@ pub extern "C" fn main() {
     let input_size = unsafe { native::eth2_blockDataSize() as usize };
 
     // Copy input into buffer (too lazy to dynmically allocate atm)
-    let mut input = [0u8; 10000];
+    let mut input = [0u8; 42000];
     unsafe {
         native::eth2_blockDataCopy(input.as_mut_ptr() as *const u32, 0, input_size as u32);
     }
@@ -63,7 +66,7 @@ pub extern "C" fn main() {
         ret
     };
 
-    let mut mem = InMemoryBackend::new(2);
+    let mut mem = InMemoryBackend::new(256);
     assert_eq!(mem.load(&input[4 + (tx_count * 176)..]), Ok(()));
     assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
 
