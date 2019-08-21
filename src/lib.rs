@@ -1,17 +1,14 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg_attr(not(feature = "std"), no_std)]
-static ALLOC: qimalloc::QIMalloc = qimalloc::QIMalloc::INIT;
-
 extern crate alloc;
 
-mod account;
-mod error;
-mod hash;
-mod process;
-mod state;
-mod transaction;
-mod u264;
+pub mod account;
+pub mod error;
+pub mod hash;
+pub mod process;
+pub mod state;
+pub mod transaction;
+pub mod u264;
 
 use crate::process::process_transactions;
 use crate::state::{Backend, InMemoryBackend};
@@ -20,7 +17,10 @@ use alloc::vec::Vec;
 use arrayref::array_ref;
 use u264::U264;
 
-#[cfg(not(test))]
+#[cfg_attr(not(feature = "std"), no_std)]
+static ALLOC: qimalloc::QIMalloc = qimalloc::QIMalloc::INIT;
+
+#[cfg(feature = "scout")]
 mod native {
     extern "C" {
         pub fn eth2_loadPreStateRoot(offset: *const u32);
@@ -30,7 +30,7 @@ mod native {
     }
 }
 
-#[cfg(not(test))]
+#[cfg(feature = "scout")]
 #[no_mangle]
 pub extern "C" fn main() {
     // Get input size

@@ -39,10 +39,10 @@ pub trait Backend {
     fn roots(&mut self) -> Result<(Hash256, Hash256), Error>;
 
     /// Increase the value of an account at `address`.
-    fn add_value(&mut self, amount: u64, address: U256) -> Result<u64, Error>;
+    fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error>;
 
     /// Decrease the value of an account at `address`.
-    fn sub_value(&mut self, amount: u64, address: U256) -> Result<u64, Error>;
+    fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error>;
 
     /// Increment the `nonce` of the account at `address` by `1`.
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error>;
@@ -133,11 +133,11 @@ impl Backend for InMemoryBackend {
         Ok((root.0, root.1.unwrap()))
     }
 
-    fn add_value(&mut self, amount: u64, address: U256) -> Result<u64, Error> {
+    fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
         unimplemented!()
     }
 
-    fn sub_value(&mut self, amount: u64, address: U256) -> Result<u64, Error> {
+    fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
         unimplemented!()
     }
 
