@@ -134,11 +134,53 @@ impl Backend for InMemoryBackend {
     }
 
     fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        unimplemented!()
+        // `value_index = (first_leaf + account) * 4 + 2`
+        let index = (((U264::one() << self.height) + address.into()) << 2) + 2.into();
+
+        let chunk = match self.db.get(&index) {
+            // If there is a modified chunk, use that. Otherwise use the original value.
+            Some(n) => (n.0, n.1.unwrap_or(n.0)),
+            None => return Err(Error::ChunkNotLoaded(index)),
+        };
+
+        let value = u64::from_le_bytes(*array_ref![chunk.1, 0, 8]);
+
+        let (value, overflow) = value.overflowing_add(amount);
+        if overflow {
+            return Err(Error::Overflow);
+        }
+
+        let mut buf = [0u8; 32];
+        buf[0..8].copy_from_slice(&value.to_le_bytes());
+
+        self.db.insert(index, (chunk.0, Some(buf)));
+
+        Ok(value)
     }
 
     fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        unimplemented!()
+        // `value_index = (first_leaf + account) * 4 + 2`
+        let index = (((U264::one() << self.height) + address.into()) << 2) + 2.into();
+
+        let chunk = match self.db.get(&index) {
+            // If there is a modified chunk, use that. Otherwise use the original value.
+            Some(n) => (n.0, n.1.unwrap_or(n.0)),
+            None => return Err(Error::ChunkNotLoaded(index)),
+        };
+
+        let value = u64::from_le_bytes(*array_ref![chunk.1, 0, 8]);
+
+        let (value, overflow) = value.overflowing_sub(amount);
+        if overflow {
+            return Err(Error::Overflow);
+        }
+
+        let mut buf = [0u8; 32];
+        buf[0..8].copy_from_slice(&value.to_le_bytes());
+
+        self.db.insert(index, (chunk.0, Some(buf)));
+
+        Ok(value)
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
