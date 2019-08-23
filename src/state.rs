@@ -39,13 +39,13 @@ pub trait Backend {
     fn roots(&mut self) -> Result<(Hash256, Hash256), Error>;
 
     /// Increase the value of an account at `address`.
-    fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error>;
+    fn add_value(&mut self, address: &Address, amount: &u64) -> Result<u64, Error>;
 
     /// Decrease the value of an account at `address`.
-    fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error>;
+    fn sub_value(&mut self, address: &Address, amount: &u64) -> Result<u64, Error>;
 
     /// Increment the `nonce` of the account at `address` by `1`.
-    fn inc_nonce(&mut self, address: Address) -> Result<u64, Error>;
+    fn inc_nonce(&mut self, address: &Address) -> Result<u64, Error>;
 }
 
 pub struct InMemoryBackend {
@@ -133,7 +133,7 @@ impl Backend for InMemoryBackend {
         Ok((root.0, root.1.unwrap()))
     }
 
-    fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
+    fn add_value(&mut self, address: &Address, amount: &u64) -> Result<u64, Error> {
         // `value_index = (first_leaf + account) * 4 + 2`
         let index = (((U264::one() << self.height) + address.into()) << 2) + 2.into();
 
@@ -145,7 +145,7 @@ impl Backend for InMemoryBackend {
 
         let value = u64::from_le_bytes(*array_ref![chunk.1, 0, 8]);
 
-        let (value, overflow) = value.overflowing_add(amount);
+        let (value, overflow) = value.overflowing_add(*amount);
         if overflow {
             return Err(Error::Overflow);
         }
@@ -158,7 +158,7 @@ impl Backend for InMemoryBackend {
         Ok(value)
     }
 
-    fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
+    fn sub_value(&mut self, address: &Address, amount: &u64) -> Result<u64, Error> {
         // `value_index = (first_leaf + account) * 4 + 2`
         let index = (((U264::one() << self.height) + address.into()) << 2) + 2.into();
 
@@ -170,7 +170,7 @@ impl Backend for InMemoryBackend {
 
         let value = u64::from_le_bytes(*array_ref![chunk.1, 0, 8]);
 
-        let (value, overflow) = value.overflowing_sub(amount);
+        let (value, overflow) = value.overflowing_sub(*amount);
         if overflow {
             return Err(Error::Overflow);
         }
@@ -183,9 +183,23 @@ impl Backend for InMemoryBackend {
         Ok(value)
     }
 
-    fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
+    fn inc_nonce(&mut self, address: &Address) -> Result<u64, Error> {
         // `nonce_index = (first_leaf + account) * 4 + 2`
         let index = (((U264::one() << self.height) + address.into()) << 2) + 1.into();
+        println!("first leaf: {:?}", U264::one() << self.height);
+        println!(
+            "first leaf + address: {:?}",
+            (U264::one() << self.height) + address.into()
+        );
+        println!(
+            "(first leaf + address) * 4: {:?}",
+            ((U264::one() << self.height) + address.into()) << 2
+        );
+
+        println!(
+            "(first leaf + address) * 4 + 1: {:?}",
+            (((U264::one() << self.height) + address.into()) << 2) + 1.into()
+        );
 
         let val = match self.db.get(&index) {
             // If there is a modified chunk, use that. Otherwise use the original value.
@@ -193,18 +207,19 @@ impl Backend for InMemoryBackend {
             None => return Err(Error::ChunkNotLoaded(index)),
         };
 
-        let nonce = u64::from_le_bytes(*array_ref![val.1, 0, 8]);
+        // let nonce = u64::from_le_bytes(*array_ref![val.1, 0, 8]);
 
-        let (nonce, overflow) = nonce.overflowing_add(1);
-        if overflow {
-            return Err(Error::Overflow);
-        }
+        // let (nonce, overflow) = nonce.overflowing_add(1);
+        // if overflow {
+        //     return Err(Error::Overflow);
+        // }
 
-        let mut nonce_buf = [0u8; 32];
-        nonce_buf[0..8].copy_from_slice(&nonce.to_le_bytes());
+        // let mut nonce_buf = [0u8; 32];
+        // nonce_buf[0..8].copy_from_slice(&nonce.to_le_bytes());
 
-        self.db.insert(index, (val.0, Some(nonce_buf)));
+        // self.db.insert(index, (val.0, Some(nonce_buf)));
 
-        Ok(nonce)
+        // Ok(nonce)
+        Ok(0)
     }
 }

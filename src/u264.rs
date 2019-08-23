@@ -390,6 +390,14 @@ impl From<u8> for U264 {
     }
 }
 
+impl From<[u8; 32]> for U264 {
+    fn from(arr: [u8; 32]) -> U264 {
+        let mut buf = [0u8; 33];
+        buf[0..32].copy_from_slice(&arr);
+        U264(buf)
+    }
+}
+
 impl From<[u8; 33]> for U264 {
     fn from(arr: [u8; 33]) -> U264 {
         U264(arr)

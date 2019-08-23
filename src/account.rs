@@ -44,35 +44,56 @@ impl Account {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-pub struct Address(U256);
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Address([u8; 32]);
 
-impl From<usize> for Address {
-    fn from(n: usize) -> Address {
-        Address(n.into())
+impl<'a> From<&'a [u8; 32]> for &'a Address {
+    fn from(arr: &'a [u8; 32]) -> &'a Address {
+        unsafe { core::mem::transmute::<&[u8; 32], &Address>(arr) }
     }
 }
 
-impl From<U256> for Address {
-    fn from(n: U256) -> Address {
-        Address(n)
+impl<'a> From<&'a Address> for &'a [u8; 32] {
+    fn from(a: &'a Address) -> &'a [u8; 32] {
+        &a.0
     }
 }
 
-impl From<[u8; 32]> for Address {
-    fn from(arr: [u8; 32]) -> Address {
-        Address(arr.into())
-    }
-}
+// impl From<U256> for Address {
+//     fn from(n: U256) -> Address {
+//         Address(n)
+//     }
+// }
 
-impl From<Address> for U264 {
-    fn from(address: Address) -> U264 {
-        U264::from(address.0)
+// impl From<[u8; 32]> for Address {
+//     fn from(arr: [u8; 32]) -> Address {
+//         Address(arr.into())
+//     }
+// }
+
+impl From<u8> for Address {
+    fn from(n: u8) -> Address {
+        Address([
+            n, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0,
+        ])
     }
 }
 
 impl From<Address> for [u8; 32] {
     fn from(a: Address) -> [u8; 32] {
         a.0.into()
+    }
+}
+
+// impl From<Address> for U264 {
+//     fn from(address: Address) -> U264 {
+//         U264::from(address.0)
+//     }
+// }
+
+impl From<&Address> for U264 {
+    fn from(address: &Address) -> U264 {
+        U264::from(address.0)
     }
 }
