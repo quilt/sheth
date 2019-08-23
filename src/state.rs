@@ -6,7 +6,6 @@ use alloc::borrow::ToOwned;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 use arrayref::{array_mut_ref, array_ref};
-use bigint::U256;
 
 pub type Hash256 = [u8; 32];
 

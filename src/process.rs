@@ -2,9 +2,6 @@ use crate::error::Error;
 use crate::state::Backend;
 use crate::transaction::{Transaction, Transfer};
 
-#[cfg(not(feature = "std"))]
-use alloc::borrow::ToOwned;
-
 pub fn process_transactions<T: Backend>(
     db: &mut T,
     transactions: &[Transaction],
@@ -18,8 +15,8 @@ pub fn process_transactions<T: Backend>(
 
         match tx {
             Transaction::Transfer(t) => transfer(db, t)?,
-            Transaction::Deposit(d) => unimplemented!(),
-            Transaction::Withdrawal(w) => unimplemented!(),
+            Transaction::Deposit(_) => unimplemented!(),
+            Transaction::Withdrawal(_) => unimplemented!(),
         }
     }
 

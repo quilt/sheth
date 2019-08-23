@@ -40,7 +40,7 @@ impl U264 {
         let Self(ref you) = other;
 
         let mut ret = [0u8; 33];
-        let mut carry = false;
+        let mut carry;
 
         // TODO: Write macro to unroll all this:
 
@@ -97,7 +97,7 @@ impl U264 {
         let Self(ref you) = other;
 
         let mut ret = [0u8; 33];
-        let mut carry = false;
+        let mut carry;
 
         // TODO: Write macro to unroll all this:
 
@@ -151,7 +151,7 @@ impl U264 {
 
     pub fn low_u32(&self) -> u32 {
         let &Self(ref arr) = self;
-        let (arr, rest) = array_refs!(arr, 4, 29);
+        let (arr, _) = array_refs!(arr, 4, 29);
         u32::from_le_bytes(*arr)
     }
 

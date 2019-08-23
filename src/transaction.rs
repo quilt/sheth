@@ -12,8 +12,8 @@ impl Transaction {
     pub fn from(&self) -> Address {
         match self {
             Transaction::Transfer(t) => t.from,
-            Transaction::Withdrawal(w) => unimplemented!(),
-            Transaction::Deposit(d) => unimplemented!(),
+            Transaction::Withdrawal(_) => unimplemented!(),
+            Transaction::Deposit(_) => unimplemented!(),
         }
     }
 
@@ -27,7 +27,7 @@ impl Transaction {
         Ok(())
     }
 
-    pub fn verify_signature<T>(&self, db: &T) -> Result<(), Error>
+    pub fn verify_signature<T>(&self, _db: &T) -> Result<(), Error>
     where
         T: Backend,
     {
@@ -35,7 +35,7 @@ impl Transaction {
         Ok(())
     }
 
-    pub fn verify_nonce<T>(&self, db: &T) -> Result<(), Error>
+    pub fn verify_nonce<T>(&self, _db: &T) -> Result<(), Error>
     where
         T: Backend,
     {
