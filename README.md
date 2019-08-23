@@ -2,14 +2,20 @@
 
 `sheth` [ ˈshēth ] is an [execution
 environment](https://hackmd.io/UzysWse1Th240HELswKqVA?view#Execution-Environment-EE)
-(EE) for Etheruem 2.0 that facilitates the movement of ether within a shard and
+(EE) for Ethereum 2.0 that facilitates the movement of ether within a shard and
 provides mechanisms to move ether between a shard and the beacon chain.
 
 ## Getting Started
-To simulate execution using [Scout](https://github.com/ewasm/scout), run the
-following two commands:
+
+First, setup your environment:
 ```console
+rustup target install wasm32-unknown-unknown
+cargo install chisel
 make setup
+```
+
+Then simulate execution using [Scout](https://github.com/ewasm/scout):
+```console
 make test
 ```
 
@@ -44,7 +50,7 @@ pub fn main(pre_state: &[u8; 32], data: &[u8]) -> [u8; 32];
 The main function essentially takes in the latest merkle root of the state as
 `pre_state` and some amount of `data`. It deserializes the data into the
 transactions that will be executed and the merkle multi-proof which is used
-authenticate the transactions. Due to some of the sematics of WebAssembly, it
+authenticate the transactions. Due to some of the semantics of WebAssembly, it
 isn't quite this simple (see the [FFI interface](src/lib.rs)) -- but the general
 idea remains intact.
 
@@ -73,7 +79,7 @@ LL = last leaf node = 2**257 - 1
   FL+0 FL+1   FL+2 FL+3  ...  LL-3 LL-2   LL-1 LL-0 
 ```
 
-Each leaf node is the root of the coresponding `account`. An `account`'s merkle
+Each leaf node is the root of the corresponding `account`. An `account`'s merkle
 tree structure is as follows:
 
 ```
@@ -101,7 +107,7 @@ Imagine a merkle tree of this shape (e.g. an `account`):
 ```
 
 In order to prove `6` is included in the root at `1`, the nodes [2, 6, 7] would
-be needed since `1` and `3` can be calculcated from that set. 
+be needed since `1` and `3` can be calculated from that set.
 
 ```
      1
@@ -113,7 +119,7 @@ be needed since `1` and `3` can be calculcated from that set.
 
 ## Roadmap
 - [x] Support intra-shard transfers
-- [ ] Consume beacon chain withdrawl receipts
+- [ ] Consume beacon chain withdrawal receipts
 - [ ] Allow shard ether to be deposited to the beacon chain
 - [ ] Validate transaction signature against BLS pubkey
 - [ ] Verify transaction nonce against account
