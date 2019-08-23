@@ -16,10 +16,9 @@ use crate::process::process_transactions;
 #[cfg(feature = "scout")]
 use crate::state::{Backend, InMemoryBackend};
 #[cfg(feature = "scout")]
-use crate::transaction::{Transaction, Transfer};
-#[cfg(feature = "scout")]
 use alloc::vec::Vec;
-#[cfg(feature = "scout")]
+
+use crate::transaction::{Transaction, Transfer};
 use arrayref::array_ref;
 
 #[cfg(not(feature = "std"))]
@@ -71,8 +70,7 @@ pub extern "C" fn main() {
     unsafe { native::eth2_savePostStateRoot(roots.1.as_ptr() as *const u32) }
 }
 
-#[cfg(feature = "scout")]
-fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction> {
+pub fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction> {
     unsafe {
         let mut ret = Vec::<Transaction>::new();
 
