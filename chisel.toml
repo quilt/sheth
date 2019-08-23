@@ -1,5 +1,5 @@
 transfer:
-  file: "target/wasm32-unknown-unknown/release/simple_transfer.wasm"
+  file: "target/wasm32-unknown-unknown/release/sheth.wasm"
   trimexports:
     preset: "ewasm"
   verifyexports:

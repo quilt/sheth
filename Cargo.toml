@@ -1,11 +1,11 @@
 [package]
-name = "simple-transfer"
+name = "sheth"
 version = "0.1.0"
 authors = ["Matt Garnett <14004106+lightclient@users.noreply.github.com>"]
 edition = "2018"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
 
 [profile.release]
 lto = true

@@ -5,8 +5,24 @@ environment](https://hackmd.io/UzysWse1Th240HELswKqVA?view#Execution-Environment
 (EE) for Etheruem 2.0 that facilitates the movement of ether within a shard and
 provides mechanisms to move ether between a shard and the beacon chain.
 
-## Quickstart
-TODO
+## Getting Started
+To simulate execution using [Scout](https://github.com/ewasm/scout), run the
+following two commands:
+```console
+make setup
+make test
+```
+
+#### Recommended Reading
+The design space for EEs is broad and builds on many different Ethereum 2.0
+related concepts. If you're lost, here are a few places to get started:
+
+* [Phase 2 Wiki](https://hackmd.io/UzysWse1Th240HELswKqVA)
+* [Phase 2 Proposal](https://notes.ethereum.org/w1Pn2iMmSTqCmVUTGV4T5A?view#Implementing-in-shard-ETH-transfers)
+* [Eth EE Proposal](https://ethresear.ch/t/eth-execution-environment-proposal/5507)
+
+Ping me [@matt_garnett](https://twitter.com/matt_garnett) for any
+other questions / concerns.
 
 ## Motivation
 * Understanding the developer experience regarding EEs could influence design
@@ -16,16 +32,7 @@ TODO
 * In order to develop efficient tooling for EE development, it's important to
   determine a lower bound for execution time and binary size to target. 
 
-## Recommended Reading
-The design space for EEs is broad and builds on many different Ethereum 2.0
-related concepts. If you're lost, here are a few places to get started:
 
-* [Phase 2 Wiki](https://hackmd.io/UzysWse1Th240HELswKqVA)
-* [Phase 2 Proposal](https://notes.ethereum.org/w1Pn2iMmSTqCmVUTGV4T5A?view#Implementing-in-shard-ETH-transfers)
-* [Eth EE Proposal](https://ethresear.ch/t/eth-execution-environment-proposal/5507)
-
-Ping me on Twitter [@matt_garnett](https://twitter.com/matt_garnett) for any
-other questions / concerns.
 
 ## Architecture
 At a high level, `sheth` provides a single state transition function:
