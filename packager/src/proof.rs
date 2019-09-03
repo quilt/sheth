@@ -3,6 +3,7 @@ use bigint::U512;
 use sheth::account::Account;
 use sheth::hash::{hash, zh};
 use std::collections::BTreeMap;
+use std::ops::{Shl, Shr};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct H256([u8; 32]);
@@ -22,12 +23,18 @@ impl H256 {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Proof {
+pub struct UncompressedProof {
     indexes: Vec<U512>,
     values: Vec<H256>,
 }
 
-pub fn generate(accounts: Vec<(U512, Account)>, height: usize) -> Proof {
+fn generate(height: usize) -> Vec<u8> {
+    let proof = generate_uncompressed_proof(vec![], height);
+    let offsets = calculate_offsets(proof.indexes);
+    unimplemented!()
+}
+
+fn generate_uncompressed_proof(accounts: Vec<(U512, Account)>, height: usize) -> UncompressedProof {
     let mut map: BTreeMap<U512, H256> = BTreeMap::new();
 
     for (address, account) in accounts.iter() {
@@ -101,7 +108,48 @@ pub fn generate(accounts: Vec<(U512, Account)>, height: usize) -> Proof {
         position += 1;
     }
 
-    indexes.sort_by(|a, b| (&b.0).cmp(&a.0));
+    indexes.sort_by(|a, b| {
+        // Normalize
+        let max = std::cmp::max(a.bits(), b.bits());
+
+        let (a, a_shift) = if a.bits() < max {
+            let shift = max - a.bits();
+            (a.shl(shift), shift)
+        } else {
+            (*a, 0)
+        };
+
+        let (b, b_shift) = if b.bits() < max {
+            let shift = max - b.bits();
+            (b.shl(shift), shift)
+        } else {
+            (*b, 0)
+        };
+        // ---------------------------------
+
+        for i in 1..=512 {
+            let a = a.shr(512 - i) & 1.into();
+            let b = b.shr(512 - i) & 1.into();
+
+            if a < b {
+                return std::cmp::Ordering::Less;
+            }
+
+            if a > b {
+                return std::cmp::Ordering::Greater;
+            }
+        }
+
+        if a_shift < b_shift {
+            return std::cmp::Ordering::Less;
+        }
+
+        if a_shift > b_shift {
+            return std::cmp::Ordering::Greater;
+        }
+
+        std::cmp::Ordering::Equal
+    });
 
     let mut values = Vec::<H256>::new();
 
@@ -109,7 +157,11 @@ pub fn generate(accounts: Vec<(U512, Account)>, height: usize) -> Proof {
         values.push(map.get(&i).unwrap().clone());
     }
 
-    Proof { indexes, values }
+    UncompressedProof { indexes, values }
+}
+
+pub fn calculate_offsets(indexes: Vec<U512>) -> Vec<u64> {
+    unimplemented!()
 }
 
 #[cfg(test)]
@@ -161,32 +213,46 @@ mod test {
         ];
 
         assert_eq!(
-            generate(vec![(0.into(), account.clone())], 1),
-            Proof {
+            generate_uncompressed_proof(vec![(0.into(), account.clone())], 1),
+            UncompressedProof {
                 indexes: vec![
-                    17.into(),
                     16.into(),
-                    11.into(),
-                    10.into(),
+                    17.into(),
                     9.into(),
+                    10.into(),
+                    11.into(),
                     3.into()
                 ],
-                values: values.clone()
+                values: vec![
+                    H256::new(array_ref![buf, 0, 32]),
+                    H256::new(array_ref![buf, 32, 32]),
+                    H256::new(array_ref![buf, 64, 32]),
+                    H256::new(array_ref![buf, 96, 32]),
+                    H256::new(&[0u8; 32]),
+                    zh(0),
+                ]
             }
         );
 
         assert_eq!(
-            generate(vec![(1.into(), account)], 1),
-            Proof {
+            generate_uncompressed_proof(vec![(1.into(), account)], 1),
+            UncompressedProof {
                 indexes: vec![
-                    25.into(),
-                    24.into(),
-                    15.into(),
-                    14.into(),
-                    13.into(),
                     2.into(),
+                    24.into(),
+                    25.into(),
+                    13.into(),
+                    14.into(),
+                    15.into()
                 ],
-                values: values.clone()
+                values: vec![
+                    zh(0),
+                    H256::new(array_ref![buf, 0, 32]),
+                    H256::new(array_ref![buf, 32, 32]),
+                    H256::new(array_ref![buf, 64, 32]),
+                    H256::new(array_ref![buf, 96, 32]),
+                    H256::new(&[0u8; 32]),
+                ]
             }
         );
     }
@@ -227,33 +293,31 @@ mod test {
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
         buf[96..104].copy_from_slice(&account.value.to_le_bytes());
 
-        let values = vec![
-            H256::new(array_ref![buf, 32, 32]),
-            H256::new(array_ref![buf, 0, 32]),
-            H256::new(&[0u8; 32]),
-            H256::new(array_ref![buf, 96, 32]),
-            H256::new(array_ref![buf, 64, 32]),
-            zh(0),
-            zh(1),
-            zh(2),
-            zh(3),
-        ];
-
         assert_eq!(
-            generate(vec![(9.into(), account.clone())], 4),
-            Proof {
+            generate_uncompressed_proof(vec![(9.into(), account.clone())], 4),
+            UncompressedProof {
                 indexes: vec![
-                    201.into(),
-                    200.into(),
-                    103.into(),
-                    102.into(),
-                    101.into(),
+                    2.into(),
                     24.into(),
+                    200.into(),
+                    201.into(),
+                    101.into(),
+                    102.into(),
+                    103.into(),
                     13.into(),
                     7.into(),
-                    2.into(),
                 ],
-                values: values.clone()
+                values: vec![
+                    zh(3),
+                    zh(0),
+                    H256::new(array_ref![buf, 0, 32]),
+                    H256::new(array_ref![buf, 32, 32]),
+                    H256::new(array_ref![buf, 64, 32]),
+                    H256::new(array_ref![buf, 96, 32]),
+                    H256::new(&[0u8; 32]),
+                    zh(1),
+                    zh(2),
+                ]
             }
         );
     }
