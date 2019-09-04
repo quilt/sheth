@@ -108,8 +108,10 @@ fn generate_uncompressed_proof(accounts: Vec<(U512, Account)>, height: usize) ->
         position += 1;
     }
 
+    // Sort bit-alphabetically
+    // https://github.com/ethereum/eth2.0-specs/issues/1303
     indexes.sort_by(|a, b| {
-        // Normalize
+        // Normalize (e.g. right pad until the the most significant bit in `a` and `b` align)
         let max = std::cmp::max(a.bits(), b.bits());
 
         let (a, a_shift) = if a.bits() < max {
@@ -148,14 +150,15 @@ pub fn calculate_offsets(indexes: Vec<U512>) -> Vec<u64> {
 
     // Convert indexes into arrays of bits
     for index in indexes.clone() {
-        let mut bits = vec![0u8; 5];
-        for i in 0..5 {
-            bits[5 - i - 1] = index.bit(i) as u8;
+        let mut bits = vec![0u8; 260];
+        for i in 0..260 {
+            bits[260 - i - 1] = index.bit(i) as u8;
         }
 
         raw_indexes.push(bits);
     }
 
+    // Translate everything to an end node (padding with 1s from the right)
     let raw_indexes = raw_indexes
         .iter()
         .map(|index| {
