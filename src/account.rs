@@ -1,5 +1,5 @@
 use crate::hash::hash;
-use crate::state::Hash256;
+use crate::state::H256;
 use crate::u264::U264;
 use arrayref::array_ref;
 use bigint::U256;
@@ -19,7 +19,15 @@ pub struct Account {
 }
 
 impl Account {
-    pub fn root(&self) -> Hash256 {
+    pub fn zero() -> Self {
+        Account {
+            pubkey: [0u8; 48],
+            nonce: 0,
+            value: 0,
+        }
+    }
+
+    pub fn root(&self) -> H256 {
         let mut buf = [0u8; 64];
 
         // Calculate account root
@@ -40,7 +48,7 @@ impl Account {
         buf[32..64].copy_from_slice(&buf2[0..32]);
         hash(&mut buf);
 
-        *array_ref![buf, 0, 32]
+        H256::new(*array_ref![buf, 0, 32])
     }
 }
 
