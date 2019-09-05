@@ -32,11 +32,13 @@ const OFFSET: usize = core::mem::size_of::<u32>();
 /// The SMT can be modeled as a `FixedVector[Account, 2**256]`. It's merkle tree structure is as
 /// follows:
 ///
+/// ```text
 ///            root
 ///           /    \
 ///         ...    ...    <= intermediate nodes
 ///         / \    / \
 ///        0   1  n n+1   <= account roots
+/// ```
 pub trait Backend<'a> {
     fn new(offsets: &'a [u8], db: &'a [u8], height: usize) -> Self;
 

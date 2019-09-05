@@ -6,11 +6,13 @@ use bigint::U256;
 
 ///  Account merkle tree schema:
 ///
+/// ```text
 ///       root
 ///     /      \
 ///  pubkey  other_root
 ///           /      \
 ///         nonce   value
+/// ```
 #[derive(Clone)]
 pub struct Account {
     pub pubkey: [u8; 48],
