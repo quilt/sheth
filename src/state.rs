@@ -24,6 +24,15 @@ impl H256 {
     }
 }
 
+impl From<u8> for H256 {
+    fn from(n: u8) -> H256 {
+        H256::new([
+            n, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0,
+        ])
+    }
+}
+
 /// Offset at which the (index, chunk) pairs begin
 const OFFSET: usize = core::mem::size_of::<u32>();
 
@@ -40,7 +49,7 @@ const OFFSET: usize = core::mem::size_of::<u32>();
 ///        0   1  n n+1   <= account roots
 /// ```
 pub trait Backend<'a> {
-    fn new(offsets: &'a [u8], db: &'a [u8], height: usize) -> Self;
+    fn new(offsets: &'a [u8], db: &'a mut [u8], height: usize) -> Self;
 
     /// Calculates the root before making changes to the structure and after in one pass.
     fn root(&mut self) -> Result<H256, Error>;
@@ -57,28 +66,42 @@ pub trait Backend<'a> {
 
 pub struct InMemoryBackend<'a> {
     pub offsets: &'a [u8],
-    pub db: &'a [u8],
+    pub db: &'a mut [u8],
     pub height: usize,
 }
 
 impl<'a> InMemoryBackend<'a> {
+    // TODO: add debug check that operations are occuring only on
+    // leaf nodes
     pub fn get(&self, index: U264) -> H256 {
+        let offset = self.lookup(index) * 32;
+        H256::new(*array_ref![self.db, offset, 32])
+    }
+
+    pub fn update(&mut self, index: U264, value: H256) {
+        let offset = self.lookup(index) * 32;
+        self.db[offset..offset + 32].copy_from_slice(value.as_bytes());
+    }
+
+    fn lookup(&self, index: U264) -> usize {
         let mut position = 0u64;
         let mut offset = 0u64;
 
-        for i in 0..260 {
-            let bit = (index << (260 - i - 1)) & 1.into();
+        for i in 1..(self.height + 4) {
+            // TODO: abstract to U264
+            let bit = (index >> (self.height + 3 - i)) & 1.into();
 
             if bit == 0.into() {
                 position += 1;
             } else {
-                let skip = u64::from_le_bytes(*array_ref![self.offsets, position as usize, 8]);
+                let skip =
+                    u64::from_le_bytes(*array_ref![self.offsets, (position * 8) as usize, 8]);
                 position += skip;
                 offset += skip;
             }
         }
 
-        H256::new(*array_ref![self.db, offset as usize, 32])
+        offset as usize
     }
 }
 
@@ -114,7 +137,7 @@ fn helper(proof: &[u8], offsets: &[u8], offset: u64) -> Result<H256, Error> {
 }
 
 impl<'a> Backend<'a> for InMemoryBackend<'a> {
-    fn new(offsets: &'a [u8], db: &'a [u8], height: usize) -> Self {
+    fn new(offsets: &'a [u8], db: &'a mut [u8], height: usize) -> Self {
         Self {
             offsets,
             db,
@@ -127,11 +150,41 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
     }
 
     fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        unimplemented!()
+        // `value_index = (first_leaf + account) * 4 + 2`
+        let index = ((((U264::one() << self.height) + address.into()) << 2) + 2.into()) << 1;
+        let chunk = self.get(index);
+
+        let value = u64::from_le_bytes(*array_ref![chunk.as_bytes(), 0, 8]);
+
+        let (value, overflow) = value.overflowing_add(amount);
+        if overflow {
+            return Err(Error::Overflow);
+        }
+
+        let mut buf = [0u8; 32];
+        buf[0..8].copy_from_slice(&value.to_le_bytes());
+        self.update(index, H256::new(buf));
+
+        Ok(value)
     }
 
     fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        unimplemented!()
+        // `value_index = (first_leaf + account) * 4 + 2`
+        let index = ((((U264::one() << self.height) + address.into()) << 2) + 2.into()) << 1;
+        let chunk = self.get(index);
+
+        let value = u64::from_le_bytes(*array_ref![chunk.as_bytes(), 0, 8]);
+
+        let (value, overflow) = value.overflowing_sub(amount);
+        if overflow {
+            return Err(Error::Overflow);
+        }
+
+        let mut buf = [0u8; 32];
+        buf[0..8].copy_from_slice(&value.to_le_bytes());
+        self.update(index, H256::new(buf));
+
+        Ok(value)
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
@@ -150,41 +203,115 @@ mod test {
     }
 
     #[test]
-    fn test_simple() {
+    fn lookup_small_branch() {
+        // indexes = [4, 10, 11, 3]
+        let offset_numbers: Vec<u64> = vec![3, 1, 1];
+        let mut offsets: Vec<u8> = vec![];
+        offsets.extend(&offset_numbers[0].to_le_bytes());
+        offsets.extend(&offset_numbers[1].to_le_bytes());
+        offsets.extend(&offset_numbers[2].to_le_bytes());
+
+        let mut proof: Vec<u8> = vec![0; 32 * 4];
+        let mem = InMemoryBackend::new(&offsets, &mut proof, 1);
+
+        assert_eq!(mem.lookup((10 << 1).into()), 1);
+        assert_eq!(mem.lookup((11 << 1).into()), 2);
+
+        // Intermediate nodes need to be normalized to end nodes
+        assert_eq!(mem.lookup((4 << 2).into()), 0);
+        assert_eq!(mem.lookup((3 << 3).into()), 3);
+    }
+
+    #[test]
+    fn lookup_single_account() {
+        // indexes = [16, 17, 9, 10, 11, 3]
+        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
+        let mut offsets: Vec<u8> = vec![];
+
+        for i in 0..5 {
+            offsets.extend(&offset_numbers[i].to_le_bytes());
+        }
+
+        let mem = InMemoryBackend::new(&offsets, &mut [], 1);
+
+        assert_eq!(mem.lookup((9 << 1).into()), 2);
+        assert_eq!(mem.lookup((10 << 1).into()), 3);
+        assert_eq!(mem.lookup((11 << 1).into()), 4);
+        assert_eq!(mem.lookup(16.into()), 0);
+        assert_eq!(mem.lookup(17.into()), 1);
+    }
+
+    #[test]
+    fn lookup_full_tree() {
+        // indexes = [8, 9, 10, 11, 12, 13, 14, 15]
+        let offset_numbers: Vec<u64> = vec![4, 2, 1, 1, 2, 1, 1];
+        let mut offsets: Vec<u8> = vec![];
+
+        for offset in offset_numbers {
+            offsets.extend(&offset.to_le_bytes());
+        }
+
+        let mem = InMemoryBackend::new(&offsets, &mut [], 1);
+
+        for i in 0..7 {
+            assert_eq!(mem.lookup(((i + 8) << 1).into()), i as usize);
+        }
+    }
+
+    #[test]
+    fn add_value() {
+        // indexes = [16, 17, 9, 10, 11, 3]
+        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
+        let mut offsets: Vec<u8> = vec![];
+
+        for offset in offset_numbers {
+            offsets.extend(&offset.to_le_bytes());
+        }
+
+        let hash_chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), H256::zero(), zh(0), zh(0)];
+        let mut chunks = vec![];
+
+        for chunk in hash_chunks {
+            chunks.extend(chunk.as_bytes());
+        }
+
+        let mut mem = InMemoryBackend::new(&offsets, &mut chunks, 1);
+
+        assert_eq!(mem.add_value(0.into(), 1), Ok(1));
+        assert_eq!(mem.get((10 << 1).into()), 1.into());
+    }
+
+    #[test]
+    fn root_simple_branch() {
         // indexes = [4, 10, 11, 3]
         let offsets: Vec<u8> = vec![3, 1, 1];
         let chunks: Vec<H256> = vec![zh(1), zh(0), zh(0), zh(2)];
 
         let mut proof: Vec<u8> = vec![];
-        proof.extend(chunks[0].as_bytes());
-        proof.extend(chunks[1].as_bytes());
-        proof.extend(chunks[2].as_bytes());
-        proof.extend(chunks[3].as_bytes());
+
+        for i in 0..4 {
+            proof.extend(chunks[i].as_bytes());
+        }
 
         assert_eq!(helper(&proof, &offsets, 0), Ok(zh(3)))
     }
 
     #[test]
-    fn test_full() {
+    fn root_full_tree() {
         // indexes = [8, 9, 10, 11, 12, 13, 14, 15]
         let offsets: Vec<u8> = vec![4, 2, 1, 1, 2, 1, 1];
         let chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0)];
-
         let mut proof: Vec<u8> = vec![];
-        proof.extend(chunks[0].as_bytes());
-        proof.extend(chunks[1].as_bytes());
-        proof.extend(chunks[2].as_bytes());
-        proof.extend(chunks[3].as_bytes());
-        proof.extend(chunks[4].as_bytes());
-        proof.extend(chunks[5].as_bytes());
-        proof.extend(chunks[6].as_bytes());
-        proof.extend(chunks[7].as_bytes());
+
+        for i in 0..8 {
+            proof.extend(chunks[i].as_bytes());
+        }
 
         assert_eq!(helper(&proof, &offsets, 0), Ok(zh(3)))
     }
 
     #[test]
-    fn test_large() {
+    fn root_large_branch() {
         // indexes = [2, 6, 7168, 7169, 3585, 1793, 897, 449, 225, 113, 57, 29, 15]
         let offsets: Vec<u8> = vec![1, 1, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
         let chunks: Vec<H256> = vec![
@@ -204,19 +331,10 @@ mod test {
         ];
 
         let mut proof: Vec<u8> = vec![];
-        proof.extend(chunks[0].as_bytes());
-        proof.extend(chunks[1].as_bytes());
-        proof.extend(chunks[2].as_bytes());
-        proof.extend(chunks[3].as_bytes());
-        proof.extend(chunks[4].as_bytes());
-        proof.extend(chunks[5].as_bytes());
-        proof.extend(chunks[6].as_bytes());
-        proof.extend(chunks[7].as_bytes());
-        proof.extend(chunks[8].as_bytes());
-        proof.extend(chunks[9].as_bytes());
-        proof.extend(chunks[10].as_bytes());
-        proof.extend(chunks[11].as_bytes());
-        proof.extend(chunks[12].as_bytes());
+
+        for i in 0..13 {
+            proof.extend(chunks[i].as_bytes());
+        }
 
         assert_eq!(helper(&proof, &offsets, 0), Ok(zh(12)))
     }
