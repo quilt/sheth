@@ -217,37 +217,45 @@ mod test {
         H256::new(*array_ref![buf, 0, 32])
     }
 
+    fn build_proof<'a>() -> (Vec<u8>, Vec<u8>) {
+        // indexes = [16, 17, 9, 10, 11, 3]
+        let offsets: Vec<u8> = vec![5, 3, 2, 1, 1].iter().fold(vec![], |mut acc, x| {
+            let x = *x as u64;
+            acc.extend(&x.to_le_bytes());
+            acc
+        });
+
+        let proof: Vec<u8> = vec![0.into(), 0.into(), zh(0), 1.into(), 1.into(), zh(0)]
+            .iter()
+            .fold(vec![], |mut acc, x| {
+                acc.extend(x.as_bytes());
+                acc
+            });
+
+        (offsets, proof)
+    }
+
     #[test]
     fn lookup_small_branch() {
         // indexes = [4, 10, 11, 3]
-        let offset_numbers: Vec<u64> = vec![3, 1, 1];
-        let mut offsets: Vec<u8> = vec![];
-        offsets.extend(&offset_numbers[0].to_le_bytes());
-        offsets.extend(&offset_numbers[1].to_le_bytes());
-        offsets.extend(&offset_numbers[2].to_le_bytes());
+        let offsets: Vec<u8> = vec![3, 1, 1].iter().fold(vec![], |mut acc, x| {
+            let x = *x as u64;
+            acc.extend(&x.to_le_bytes());
+            acc
+        });
 
-        let mut proof: Vec<u8> = vec![0; 32 * 4];
-        let mem = InMemoryBackend::new(&offsets, &mut proof, 1);
+        let mem = InMemoryBackend::new(&offsets, &mut [], 1);
 
         assert_eq!(mem.lookup((10 << 1).into()), 1);
         assert_eq!(mem.lookup((11 << 1).into()), 2);
-
-        // Intermediate nodes need to be normalized to end nodes
         assert_eq!(mem.lookup((4 << 2).into()), 0);
         assert_eq!(mem.lookup((3 << 3).into()), 3);
     }
 
     #[test]
     fn lookup_single_account() {
-        // indexes = [16, 17, 9, 10, 11, 3]
-        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
-        let mut offsets: Vec<u8> = vec![];
-
-        for i in 0..5 {
-            offsets.extend(&offset_numbers[i].to_le_bytes());
-        }
-
-        let mem = InMemoryBackend::new(&offsets, &mut [], 1);
+        let (offsets, mut proof) = build_proof();
+        let mem = InMemoryBackend::new(&offsets, &mut proof, 1);
 
         assert_eq!(mem.lookup((9 << 1).into()), 2);
         assert_eq!(mem.lookup((10 << 1).into()), 3);
@@ -259,12 +267,11 @@ mod test {
     #[test]
     fn lookup_full_tree() {
         // indexes = [8, 9, 10, 11, 12, 13, 14, 15]
-        let offset_numbers: Vec<u64> = vec![4, 2, 1, 1, 2, 1, 1];
-        let mut offsets: Vec<u8> = vec![];
-
-        for offset in offset_numbers {
-            offsets.extend(&offset.to_le_bytes());
-        }
+        let offsets: Vec<u8> = vec![4, 2, 1, 1, 2, 1, 1].iter().fold(vec![], |mut acc, x| {
+            let x = *x as u64;
+            acc.extend(&x.to_le_bytes());
+            acc
+        });
 
         let mem = InMemoryBackend::new(&offsets, &mut [], 1);
 
@@ -275,84 +282,42 @@ mod test {
 
     #[test]
     fn add_value() {
-        // indexes = [16, 17, 9, 10, 11, 3]
-        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
-        let mut offsets: Vec<u8> = vec![];
+        let (offsets, mut proof) = build_proof();
+        let mut mem = InMemoryBackend::new(&offsets, &mut proof, 1);
 
-        for offset in offset_numbers {
-            offsets.extend(&offset.to_le_bytes());
-        }
-
-        let hash_chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), H256::zero(), zh(0), zh(0)];
-        let mut chunks = vec![];
-
-        for chunk in hash_chunks {
-            chunks.extend(chunk.as_bytes());
-        }
-
-        let mut mem = InMemoryBackend::new(&offsets, &mut chunks, 1);
-
-        assert_eq!(mem.add_value(0.into(), 1), Ok(1));
-        assert_eq!(mem.get((10 << 1).into()), 1.into());
+        assert_eq!(mem.add_value(0.into(), 1), Ok(2));
+        assert_eq!(mem.get((10 << 1).into()), 2.into());
     }
 
     #[test]
     fn sub_value() {
-        // indexes = [16, 17, 9, 10, 11, 3]
-        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
-        let mut offsets: Vec<u8> = vec![];
+        let (offsets, mut proof) = build_proof();
+        let mut mem = InMemoryBackend::new(&offsets, &mut proof, 1);
 
-        for offset in offset_numbers {
-            offsets.extend(&offset.to_le_bytes());
-        }
-
-        let hash_chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), 2.into(), zh(0), zh(0)];
-        let mut chunks = vec![];
-
-        for chunk in hash_chunks {
-            chunks.extend(chunk.as_bytes());
-        }
-
-        let mut mem = InMemoryBackend::new(&offsets, &mut chunks, 1);
-
-        assert_eq!(mem.sub_value(0.into(), 1), Ok(1));
-        assert_eq!(mem.get((10 << 1).into()), 1.into());
+        assert_eq!(mem.sub_value(0.into(), 1), Ok(0));
+        assert_eq!(mem.get((10 << 1).into()), 0.into());
     }
 
     #[test]
     fn inc_nonce() {
-        // indexes = [16, 17, 9, 10, 11, 3]
-        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
-        let mut offsets: Vec<u8> = vec![];
+        let (offsets, mut proof) = build_proof();
+        let mut mem = InMemoryBackend::new(&offsets, &mut proof, 1);
 
-        for offset in offset_numbers {
-            offsets.extend(&offset.to_le_bytes());
-        }
-
-        let hash_chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), 0.into(), 0.into(), zh(0)];
-        let mut chunks = vec![];
-
-        for chunk in hash_chunks {
-            chunks.extend(chunk.as_bytes());
-        }
-
-        let mut mem = InMemoryBackend::new(&offsets, &mut chunks, 1);
-
-        assert_eq!(mem.inc_nonce(0.into()), Ok(1));
-        assert_eq!(mem.get((11 << 1).into()), 1.into());
+        assert_eq!(mem.inc_nonce(0.into()), Ok(2));
+        assert_eq!(mem.get((11 << 1).into()), 2.into());
     }
 
     #[test]
     fn root_simple_branch() {
         // indexes = [4, 10, 11, 3]
         let offsets: Vec<u8> = vec![3, 1, 1];
-        let chunks: Vec<H256> = vec![zh(1), zh(0), zh(0), zh(2)];
 
-        let mut proof: Vec<u8> = vec![];
-
-        for i in 0..4 {
-            proof.extend(chunks[i].as_bytes());
-        }
+        let proof: Vec<u8> = vec![zh(1), zh(0), zh(0), zh(2)]
+            .iter()
+            .fold(vec![], |mut acc, x| {
+                acc.extend(x.as_bytes());
+                acc
+            });
 
         assert_eq!(helper(&proof, &offsets, 0), Ok(zh(3)))
     }
@@ -361,12 +326,12 @@ mod test {
     fn root_full_tree() {
         // indexes = [8, 9, 10, 11, 12, 13, 14, 15]
         let offsets: Vec<u8> = vec![4, 2, 1, 1, 2, 1, 1];
-        let chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0)];
-        let mut proof: Vec<u8> = vec![];
-
-        for i in 0..8 {
-            proof.extend(chunks[i].as_bytes());
-        }
+        let proof: Vec<u8> = vec![zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0)]
+            .iter()
+            .fold(vec![], |mut acc, x| {
+                acc.extend(x.as_bytes());
+                acc
+            });
 
         assert_eq!(helper(&proof, &offsets, 0), Ok(zh(3)))
     }
@@ -375,7 +340,7 @@ mod test {
     fn root_large_branch() {
         // indexes = [2, 6, 7168, 7169, 3585, 1793, 897, 449, 225, 113, 57, 29, 15]
         let offsets: Vec<u8> = vec![1, 1, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-        let chunks: Vec<H256> = vec![
+        let proof: Vec<u8> = vec![
             zh(11),
             zh(10),
             zh(0),
@@ -389,13 +354,12 @@ mod test {
             zh(7),
             zh(8),
             zh(9),
-        ];
-
-        let mut proof: Vec<u8> = vec![];
-
-        for i in 0..13 {
-            proof.extend(chunks[i].as_bytes());
-        }
+        ]
+        .iter()
+        .fold(vec![], |mut acc, x| {
+            acc.extend(x.as_bytes());
+            acc
+        });
 
         assert_eq!(helper(&proof, &offsets, 0), Ok(zh(12)))
     }
