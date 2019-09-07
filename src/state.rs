@@ -188,7 +188,22 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
-        unimplemented!()
+        // `nonce_index = (first_leaf + account) * 4 + 1`
+        let index = ((((U264::one() << self.height) + address.into()) << 2) + 3.into()) << 1;
+        let chunk = self.get(index);
+
+        let nonce = u64::from_le_bytes(*array_ref![chunk.as_bytes(), 0, 8]);
+
+        let (nonce, overflow) = nonce.overflowing_add(1);
+        if overflow {
+            return Err(Error::Overflow);
+        }
+
+        let mut buf = [0u8; 32];
+        buf[0..8].copy_from_slice(&nonce.to_le_bytes());
+        self.update(index, H256::new(buf));
+
+        Ok(nonce)
     }
 }
 
@@ -279,6 +294,52 @@ mod test {
 
         assert_eq!(mem.add_value(0.into(), 1), Ok(1));
         assert_eq!(mem.get((10 << 1).into()), 1.into());
+    }
+
+    #[test]
+    fn sub_value() {
+        // indexes = [16, 17, 9, 10, 11, 3]
+        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
+        let mut offsets: Vec<u8> = vec![];
+
+        for offset in offset_numbers {
+            offsets.extend(&offset.to_le_bytes());
+        }
+
+        let hash_chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), 2.into(), zh(0), zh(0)];
+        let mut chunks = vec![];
+
+        for chunk in hash_chunks {
+            chunks.extend(chunk.as_bytes());
+        }
+
+        let mut mem = InMemoryBackend::new(&offsets, &mut chunks, 1);
+
+        assert_eq!(mem.sub_value(0.into(), 1), Ok(1));
+        assert_eq!(mem.get((10 << 1).into()), 1.into());
+    }
+
+    #[test]
+    fn inc_nonce() {
+        // indexes = [16, 17, 9, 10, 11, 3]
+        let offset_numbers: Vec<u64> = vec![5, 3, 2, 1, 1];
+        let mut offsets: Vec<u8> = vec![];
+
+        for offset in offset_numbers {
+            offsets.extend(&offset.to_le_bytes());
+        }
+
+        let hash_chunks: Vec<H256> = vec![zh(0), zh(0), zh(0), 0.into(), 0.into(), zh(0)];
+        let mut chunks = vec![];
+
+        for chunk in hash_chunks {
+            chunks.extend(chunk.as_bytes());
+        }
+
+        let mut mem = InMemoryBackend::new(&offsets, &mut chunks, 1);
+
+        assert_eq!(mem.inc_nonce(0.into()), Ok(1));
+        assert_eq!(mem.get((11 << 1).into()), 1.into());
     }
 
     #[test]
