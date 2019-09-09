@@ -3,15 +3,24 @@ pub mod transactions;
 
 use sheth::process::process_transactions;
 use sheth::state::{Backend, InMemoryBackend};
+use std::env;
 
 fn main() {
-    // Hard coded for now
-    let tx_count = 50;
-    let account_count = 100;
-    let height = 256;
-    // ---
+    let args: Vec<String> = env::args().collect();
 
-    // let transactions = transactions::generate(tx_count, account_count);
+    let height = args[0]
+        .parse::<usize>()
+        .expect("Height should be a number.");
+
+    let account_count = args[1]
+        .parse::<usize>()
+        .expect("Account count should be a number.");
+
+    let tx_count = args[2]
+        .parse::<usize>()
+        .expect("Transaction count should be a number.");
+
+    let transactions = transactions::generate(tx_count, account_count);
     // let proof = proof::generate(tx_count, height);
 
     // let mut input = transactions::serialize(&transactions);
