@@ -2,7 +2,6 @@ use crate::proof::accounts::AddressedAccount;
 use crate::proof::h256::H256;
 use arrayref::array_ref;
 use bigint::U512;
-use sheth::account::Account;
 use sheth::hash::{hash, zh};
 use std::collections::BTreeMap;
 use std::ops::Shl;
@@ -130,6 +129,7 @@ pub fn generate(accounts: Vec<AddressedAccount>, height: usize) -> UncompressedP
 mod test {
     use super::*;
     use crate::proof::h256::zh;
+    use sheth::account::Account;
 
     #[test]
     fn one_bit_tree() {

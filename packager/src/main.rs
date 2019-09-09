@@ -21,10 +21,10 @@ fn main() {
         .expect("Transaction count should be a number.");
 
     let transactions = transactions::generate(tx_count, account_count);
-    // let proof = proof::generate(tx_count, height);
+    let proof = proof::generate(tx_count as u64, height);
 
-    // let mut input = transactions::serialize(&transactions);
-    // input.extend(proof.clone());
+    let mut input = transactions::serialize(&transactions);
+    input.extend(proof.clone());
 
     // let mut mem = InMemoryBackend::new(height);
 

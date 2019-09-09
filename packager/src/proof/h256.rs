@@ -1,3 +1,4 @@
+#[cfg(test)]
 use arrayref::array_ref;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -8,15 +9,12 @@ impl H256 {
         H256(arr.clone())
     }
 
-    pub fn zero() -> Self {
-        H256([0u8; 32])
-    }
-
     pub fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
 }
 
+#[cfg(test)]
 pub fn zh(depth: usize) -> H256 {
     let mut buf = [0u8; 64];
     sheth::hash::zh(depth, &mut buf);
