@@ -28,7 +28,6 @@ fn main() {
 
     // let mut mem = InMemoryBackend::new(height);
 
-    // assert_eq!(mem.load(&proof), Ok(()));
     // assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
 
     // let roots = mem.roots().unwrap();

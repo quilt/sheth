@@ -28,7 +28,9 @@ pub fn calculate(indexes: Vec<U512>) -> Vec<u64> {
         })
         .collect();
 
-    helper(raw_indexes)
+    let mut ret: Vec<u64> = vec![indexes.len() as u64];
+    ret.extend(helper(raw_indexes));
+    ret
 }
 
 fn helper(indexes: Vec<Vec<u8>>) -> Vec<u64> {
@@ -72,7 +74,7 @@ mod test {
     #[test]
     fn offset_4_bit_left() {
         let indexes: Vec<U512> = vec![8.into(), 9.into(), 5.into(), 12.into(), 13.into(), 7.into()];
-        assert_eq!(calculate(indexes), vec![3, 2, 1, 2, 1]);
+        assert_eq!(calculate(indexes), vec![6, 3, 2, 1, 2, 1]);
     }
 
     #[test]
@@ -86,7 +88,7 @@ mod test {
             7.into(),
         ];
 
-        assert_eq!(calculate(indexes), vec![3, 1, 1, 2, 1]);
+        assert_eq!(calculate(indexes), vec![6, 3, 1, 1, 2, 1]);
     }
 
     #[test]
@@ -102,25 +104,25 @@ mod test {
             15.into(),
         ];
 
-        assert_eq!(calculate(indexes), vec![4, 2, 1, 1, 2, 1, 1]);
+        assert_eq!(calculate(indexes), vec![8, 4, 2, 1, 1, 2, 1, 1]);
     }
 
     #[test]
     fn offset_4_bit_left_small_branch() {
         let indexes: Vec<U512> = vec![4.into(), 10.into(), 11.into(), 3.into()];
-        assert_eq!(calculate(indexes), vec![3, 1, 1]);
+        assert_eq!(calculate(indexes), vec![4, 3, 1, 1]);
     }
 
     #[test]
     fn offset_4_bit_right_small_branch() {
         let indexes: Vec<U512> = vec![2.into(), 12.into(), 13.into(), 7.into()];
-        assert_eq!(calculate(indexes), vec![1, 2, 1]);
+        assert_eq!(calculate(indexes), vec![4, 1, 2, 1]);
     }
 
     #[test]
     fn offset_5_bit_right_small_branch() {
         let indexes: Vec<U512> = vec![16.into(), 17.into(), 9.into(), 5.into(), 3.into()];
-        assert_eq!(calculate(indexes), vec![4, 3, 2, 1]);
+        assert_eq!(calculate(indexes), vec![5, 4, 3, 2, 1]);
     }
 
     #[test]
@@ -134,13 +136,13 @@ mod test {
             3.into(),
         ];
 
-        assert_eq!(calculate(indexes), vec![5, 3, 2, 1, 1]);
+        assert_eq!(calculate(indexes), vec![6, 5, 3, 2, 1, 1]);
     }
 
     #[test]
     fn offset_5_bit_right_branch() {
         let indexes: Vec<U512> = vec![4.into(), 10.into(), 22.into(), 23.into(), 3.into()];
-        assert_eq!(calculate(indexes), vec![4, 1, 1, 1]);
+        assert_eq!(calculate(indexes), vec![5, 4, 1, 1, 1]);
     }
 
     #[test]
@@ -153,7 +155,7 @@ mod test {
 
         assert_eq!(
             calculate(indexes),
-            vec![8, 4, 2, 1, 1, 2, 1, 1, 4, 2, 1, 1, 2, 1, 1]
+            vec![16, 8, 4, 2, 1, 1, 2, 1, 1, 4, 2, 1, 1, 2, 1, 1]
         );
     }
 }
