@@ -105,7 +105,7 @@ impl<'a> InMemoryBackend<'a> {
     }
 }
 
-fn helper(proof: &[u8], offsets: &[u8], offset: u64) -> Result<H256, Error> {
+fn helper(proof: &[u8], offsets: &[u64], offset: u64) -> Result<H256, Error> {
     if offsets.len() == 0 {
         return Ok(H256::new(*array_ref![proof, (offset * 32) as usize, 32]));
     }
@@ -146,7 +146,11 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
     }
 
     fn root(&mut self) -> Result<H256, Error> {
-        helper(self.db, self.offsets, 0)
+        let offsets = unsafe {
+            core::slice::from_raw_parts(self.offsets.as_ptr() as *const u64, self.offsets.len() / 8)
+        };
+
+        helper(self.db, offsets, 0)
     }
 
     fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {

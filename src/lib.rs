@@ -54,7 +54,6 @@ pub extern "C" fn main() {
 
     // Load multi-merkle proof
     let mut mem = InMemoryBackend::new(256);
-    assert_eq!(mem.load(&input[4 + (tx_count * 176)..]), Ok(()));
 
     // Proccess all transactions (only transfers for now)
     assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
