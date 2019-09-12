@@ -314,7 +314,7 @@ mod test {
     #[test]
     fn root_simple_branch() {
         // indexes = [4, 10, 11, 3]
-        let offsets: Vec<u8> = vec![3, 1, 1];
+        let offsets: Vec<u64> = vec![3, 1, 1];
 
         let proof: Vec<u8> = vec![zh(1), zh(0), zh(0), zh(2)]
             .iter()
@@ -329,7 +329,7 @@ mod test {
     #[test]
     fn root_full_tree() {
         // indexes = [8, 9, 10, 11, 12, 13, 14, 15]
-        let offsets: Vec<u8> = vec![4, 2, 1, 1, 2, 1, 1];
+        let offsets: Vec<u64> = vec![4, 2, 1, 1, 2, 1, 1];
         let proof: Vec<u8> = vec![zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0)]
             .iter()
             .fold(vec![], |mut acc, x| {
@@ -343,7 +343,7 @@ mod test {
     #[test]
     fn root_large_branch() {
         // indexes = [2, 6, 7168, 7169, 3585, 1793, 897, 449, 225, 113, 57, 29, 15]
-        let offsets: Vec<u8> = vec![1, 1, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+        let offsets: Vec<u64> = vec![1, 1, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
         let proof: Vec<u8> = vec![
             zh(11),
             zh(10),
