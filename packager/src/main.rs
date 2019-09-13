@@ -31,17 +31,7 @@ fn main() {
     let mut input = proof;
     // input.extend(transactions.clone());
 
-    let length = usize::from_le_bytes(*array_ref![input, 0, 8]);
-
-    let begin = 8;
-    let end = length * 8;
-    let offsets = &input[begin..end];
-
-    let begin = end;
-    let end = begin + length * 32;
-    let proof = unsafe { &mut *(&input[begin..end] as *const [u8] as *mut [u8]) };
-
-    let mut mem = InMemoryBackend::new(offsets, proof, height);
+    let mut mem = InMemoryBackend::new(&mut input, height);
     // assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
 
     let pre_state_root = mem.root().unwrap();
@@ -51,7 +41,7 @@ fn main() {
     println!("    - scout/sheth.wasm");
     println!("shard_pre_state:");
     println!("  exec_env_states:");
-    println!("    - \"{}\"", hex::encode(pre_state_root.as_bytes()));
+    println!("    - \"{}\"", hex::encode(&pre_state_root));
     println!("shard_blocks:");
     println!("  - env: 0");
     println!("    data: \"{}\"", hex::encode(input));

@@ -2,7 +2,7 @@ use crate::proof::accounts::random_accounts;
 use crate::proof::offsets::calculate as calculate_offsets;
 use crate::proof::uncompressed::generate as generate_uncompressed_proof;
 use arrayref::array_ref;
-use sheth::state::{Backend, InMemoryBackend, H256};
+use sheth::state::{Backend, InMemoryBackend};
 
 pub fn generate(num_accounts: usize, height: usize) -> Vec<u8> {
     let accounts = random_accounts(num_accounts, height);
@@ -36,7 +36,7 @@ mod test {
         // 3  => h(6, 7)   => "cc86176af0b56c8741cab9fed5311cf0055c31d0441125f27a17f9917d93774b"
         // 1  => h(2, 3)   => "f44277f53194537d77ea41cd5b7c8fd3b408a0942f6edc09a3feb4ee3e588d48"
 
-        let proof = vec![
+        let mut proof = vec![
             6, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0,
             0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 218, 109, 128, 123, 247, 149,
             16, 97, 70, 229, 130, 39, 117, 217, 20, 176, 39, 122, 101, 36, 15, 101, 14, 212, 200,
@@ -50,23 +50,13 @@ mod test {
             0, 0, 0, 0,
         ];
 
-        assert_eq!(generate(1, 1), proof);
-
-        let length = usize::from_le_bytes(*array_ref![proof, 0, 8]);
-        let begin = 8;
-        let end = length * 8;
-        let offsets = &proof[begin..end];
-
-        let begin = end;
-        let end = begin + length * 32;
-        let proof = unsafe { &mut *(&proof[begin..end] as *const [u8] as *mut [u8]) };
-        let mut mem = InMemoryBackend::new(offsets, proof, 1);
-
         let root = vec![
             244, 66, 119, 245, 49, 148, 83, 125, 119, 234, 65, 205, 91, 124, 143, 211, 180, 8, 160,
             148, 47, 110, 220, 9, 163, 254, 180, 238, 62, 88, 141, 72,
         ];
 
-        assert_eq!(mem.root(), Ok(H256::new(*array_ref![root, 0, 32])));
+        assert_eq!(generate(1, 1), proof);
+        let mut mem = InMemoryBackend::new(&mut proof, 1);
+        assert_eq!(mem.root(), Ok(*array_ref![root, 0, 32]));
     }
 }
