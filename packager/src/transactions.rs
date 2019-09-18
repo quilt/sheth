@@ -1,17 +1,13 @@
 use crate::accounts::AddressedAccount;
-use bigint::U256;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use sheth::account::Account;
 use sheth::transaction::{Transaction, Transfer};
-use std::collections::BTreeMap;
 
 pub fn generate(tx_count: usize, mut accounts: Vec<AddressedAccount>) -> Vec<Transaction> {
     let mut rng = StdRng::seed_from_u64(42);
 
-    let mut map: BTreeMap<U256, Account> = BTreeMap::new();
     let mut transactions: Vec<Transaction> = vec![];
 
-    for i in 0..tx_count {
+    for _ in 0..tx_count {
         let to = rng.gen_range(0, accounts.len());
         let from = rng.gen_range(0, accounts.len());
 
@@ -53,5 +49,6 @@ pub fn serialize(transactions: &[Transaction]) -> Vec<u8> {
             _ => unimplemented!(),
         }
     }
+
     bytes
 }

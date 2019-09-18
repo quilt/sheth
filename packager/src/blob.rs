@@ -2,8 +2,7 @@ use crate::accounts::random_accounts;
 use crate::proof::offsets::calculate as calculate_offsets;
 use crate::proof::uncompressed::generate as generate_uncompressed_proof;
 use crate::transactions;
-use arrayref::array_ref;
-use sheth::state::{Backend, InMemoryBackend};
+use sheth::transaction::Transaction;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Configuration {
@@ -34,31 +33,46 @@ impl Configuration {
     }
 }
 
-pub fn generate(config: Configuration) -> Vec<u8> {
+pub struct Blob {
+    pub proof: Vec<u8>,
+    pub transactions: Vec<Transaction>,
+}
+
+impl Blob {
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut ret = transactions::serialize(&self.transactions);
+        ret.extend(&self.proof);
+        ret
+    }
+}
+
+pub fn generate(config: Configuration) -> Blob {
     let accounts = random_accounts(config.accounts, config.tree_height);
     let proof = generate_uncompressed_proof(accounts.clone(), config.tree_height);
     let offsets = calculate_offsets(proof.indexes);
-    let transactions =
-        transactions::serialize(&transactions::generate(config.transactions, accounts));
+    let transactions = transactions::generate(config.transactions, accounts);
 
-    let mut ret = transactions;
-
-    ret = offsets.iter().fold(ret, |mut acc, x| {
+    let mut compressed_proof = offsets.iter().fold(vec![], |mut acc, x| {
         acc.extend(&x.to_le_bytes());
         acc
     });
 
-    ret = proof.values.iter().fold(ret, |mut acc, x| {
+    compressed_proof = proof.values.iter().fold(compressed_proof, |mut acc, x| {
         acc.extend(x.as_bytes());
         acc
     });
 
-    ret
+    Blob {
+        proof: compressed_proof,
+        transactions,
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use arrayref::array_ref;
+    use sheth::state::{Backend, InMemoryBackend};
 
     #[test]
     fn generate_small_tree() {
@@ -97,7 +111,7 @@ mod test {
             tree_height: 1,
         };
 
-        assert_eq!(generate(config), proof);
+        assert_eq!(generate(config).to_bytes(), proof);
         let mut mem = InMemoryBackend::new(&mut proof[4..], 1);
         assert_eq!(mem.root(), Ok(*array_ref![root, 0, 32]));
     }
