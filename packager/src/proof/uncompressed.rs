@@ -1,4 +1,4 @@
-use crate::proof::accounts::AddressedAccount;
+use crate::accounts::AddressedAccount;
 use crate::proof::h256::H256;
 use arrayref::array_ref;
 use bigint::U512;
@@ -19,7 +19,7 @@ pub fn generate(accounts: Vec<AddressedAccount>, height: usize) -> UncompressedP
         let (address, account) = (account.0, account.1);
 
         // Calulate the root index of the account (e.g. `first_leaf` + address)
-        let index = (U512::one() << height) + address;
+        let index = (U512::one() << height) + U512::from(address);
 
         // Copy the values of the account into a buffer
         let mut buf = [0u8; 128];
@@ -159,15 +159,6 @@ mod test {
         buf[0..48].copy_from_slice(&account.pubkey);
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
         buf[96..104].copy_from_slice(&account.value.to_le_bytes());
-
-        let values = vec![
-            H256::new(array_ref![buf, 32, 32]),
-            H256::new(array_ref![buf, 0, 32]),
-            H256::new(&[0u8; 32]),
-            H256::new(array_ref![buf, 96, 32]),
-            H256::new(array_ref![buf, 64, 32]),
-            zh(0),
-        ];
 
         assert_eq!(
             generate(vec![AddressedAccount(0.into(), account.clone())], 1),

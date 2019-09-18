@@ -1,32 +1,38 @@
+use crate::accounts::AddressedAccount;
 use bigint::U256;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use sheth::account::Account;
 use sheth::transaction::{Transaction, Transfer};
 use std::collections::BTreeMap;
 
-pub fn generate(tx_count: usize, account_count: usize) -> Vec<Transaction> {
+pub fn generate(tx_count: usize, mut accounts: Vec<AddressedAccount>) -> Vec<Transaction> {
+    let mut rng = StdRng::seed_from_u64(42);
+
     let mut map: BTreeMap<U256, Account> = BTreeMap::new();
     let mut transactions: Vec<Transaction> = vec![];
 
     for i in 0..tx_count {
-        let mut sender = map
-            .get(&((i % account_count).into()))
-            .unwrap_or(&Account {
-                pubkey: [0u8; 48],
-                nonce: 0,
-                value: 0,
-            })
-            .clone();
+        let to = rng.gen_range(0, accounts.len());
+        let from = rng.gen_range(0, accounts.len());
 
-        transactions.push(Transaction::Transfer(Transfer {
-            to: (i % (account_count - 1)).into(),
-            from: (i % account_count).into(),
-            nonce: sender.nonce,
-            amount: sender.value,
+        let tx = Transaction::Transfer(Transfer {
+            to: accounts[to].0.into(),
+            from: accounts[from].0.into(),
+            nonce: accounts[from].1.nonce,
+            amount: rng.gen_range(0, accounts[from].1.value),
             signature: [0u8; 96],
-        }));
+        });
 
-        sender.nonce += 1;
-        map.insert((1 % account_count).into(), sender);
+        match &tx {
+            Transaction::Transfer(t) => {
+                accounts[from].1.nonce += 1;
+                accounts[from].1.value -= t.amount;
+                accounts[to].1.value += t.amount;
+            }
+            _ => unreachable!(),
+        }
+
+        transactions.push(tx);
     }
 
     transactions

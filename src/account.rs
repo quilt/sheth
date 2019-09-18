@@ -1,5 +1,5 @@
 use crate::u264::U264;
-use bigint::U256;
+use bigint::{U256, U512};
 
 ///  Account merkle tree schema:
 ///
@@ -39,6 +39,12 @@ impl From<usize> for Address {
 impl From<U256> for Address {
     fn from(n: U256) -> Address {
         Address(n)
+    }
+}
+
+impl From<U512> for Address {
+    fn from(n: U512) -> Address {
+        Address(n.into())
     }
 }
 
