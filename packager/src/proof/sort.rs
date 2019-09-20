@@ -1,11 +1,13 @@
 use bigint::U512;
 use std::ops::Shl;
 
-pub fn alpha_sort(mut n: Vec<U512>) -> Vec<U512> {
+pub fn alpha_sort(n: &Vec<U512>) -> Vec<U512> {
     // Sort bit-alphabetically
     // https://github.com/ethereum/eth2.0-specs/issues/1303
 
-    n.sort_by(|a, b| {
+    let mut ret = n.clone();
+
+    ret.sort_by(|a, b| {
         let (a, a_shift, b, b_shift) = normalize(*a, *b);
         match a.cmp(&b) {
             std::cmp::Ordering::Less => std::cmp::Ordering::Less,
@@ -14,7 +16,7 @@ pub fn alpha_sort(mut n: Vec<U512>) -> Vec<U512> {
         }
     });
 
-    n
+    ret
 }
 
 fn normalize(a: U512, b: U512) -> (U512, usize, U512, usize) {
@@ -55,7 +57,7 @@ mod test {
     #[test]
     fn alpha_sort_two_numbers() {
         assert_eq!(
-            alpha_sort(vec![3.into(), 2.into()]),
+            alpha_sort(&vec![3.into(), 2.into()]),
             vec![2.into(), 3.into()]
         );
     }
@@ -76,7 +78,7 @@ mod test {
                 acc
             });
 
-        assert_eq!(alpha_sort(unsorted), sorted);
+        assert_eq!(alpha_sort(&unsorted), sorted);
     }
 
     #[ignore] // Current implementation only works on branches
@@ -97,6 +99,6 @@ mod test {
             acc
         });
 
-        assert_eq!(alpha_sort(unsorted), sorted);
+        assert_eq!(alpha_sort(&unsorted), sorted);
     }
 }

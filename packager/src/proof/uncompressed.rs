@@ -1,10 +1,10 @@
 use crate::accounts::AddressedAccount;
 use crate::proof::h256::H256;
+use crate::proof::sort::alpha_sort;
 use arrayref::array_ref;
 use bigint::U512;
 use sheth::hash::{hash, zh};
-use std::collections::BTreeMap;
-use std::ops::Shl;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub struct UncompressedProof {
@@ -13,7 +13,21 @@ pub struct UncompressedProof {
 }
 
 pub fn generate(accounts: Vec<AddressedAccount>, height: usize) -> UncompressedProof {
-    let mut map: BTreeMap<U512, H256> = BTreeMap::new();
+    let mut map = init_multiproof(accounts, height);
+    let indexes = fill_proof(&mut map, height);
+    let indexes = alpha_sort(&indexes);
+
+    UncompressedProof {
+        indexes: indexes.clone(),
+        values: indexes
+            .iter()
+            .map(|i| map.get(&i).unwrap().clone())
+            .collect(),
+    }
+}
+
+pub fn init_multiproof(accounts: Vec<AddressedAccount>, height: usize) -> HashMap<U512, H256> {
+    let mut map: HashMap<U512, H256> = HashMap::new();
 
     for account in accounts.into_iter() {
         let (address, account) = (account.0, account.1);
@@ -35,41 +49,39 @@ pub fn generate(accounts: Vec<AddressedAccount>, height: usize) -> UncompressedP
         map.insert((index << 2) + 3.into(), H256::new(&[0u8; 32]));
     }
 
-    let mut index_buffer: Vec<U512> = map.keys().clone().map(|x| x.to_owned()).collect();
-    index_buffer.sort_by(|a, b| (&b.0).cmp(&a.0));
+    map
+}
 
-    let mut indexes: Vec<U512> = index_buffer.clone();
+fn fill_proof(map: &mut HashMap<U512, H256>, height: usize) -> Vec<U512> {
+    let mut indexes: Vec<U512> = map.keys().map(|x| x.to_owned()).collect();
+    indexes.sort();
+    indexes.reverse();
+
+    let mut proof_indexes: Vec<U512> = indexes.clone();
 
     let mut position = 0;
-    while index_buffer[position] > 1.into() {
-        let left = index_buffer[position] & (!U512::zero() - 1.into());
+
+    while indexes[position] > U512::from(1) {
+        let left = indexes[position] & (!U512::zero() - U512::one());
         let right = left + 1.into();
         let parent = left / 2.into();
 
         if !map.contains_key(&parent) {
-            let left: H256 = match map.get(&left) {
-                Some(x) => x.clone(),
-                None => {
-                    let mut buf = [0u8; 64];
-                    zh((height + 1) - index_buffer[position].bits(), &mut buf);
-                    let buf = H256::new(array_ref![buf, 0, 32]);
-                    indexes.push(left);
-                    map.insert(left, buf.clone());
-                    buf
-                }
-            };
+            let left = get_or_generate(
+                map,
+                &mut proof_indexes,
+                height,
+                left,
+                indexes[position].bits(),
+            );
 
-            let right: H256 = match map.get(&right) {
-                Some(x) => x.clone(),
-                None => {
-                    let mut buf = [0u8; 64];
-                    zh((height + 1) - index_buffer[position].bits(), &mut buf);
-                    let buf = H256::new(array_ref![buf, 0, 32]);
-                    indexes.push(right);
-                    map.insert(right, buf.clone());
-                    buf
-                }
-            };
+            let right = get_or_generate(
+                map,
+                &mut proof_indexes,
+                height,
+                right,
+                indexes[position].bits(),
+            );
 
             // Calculate hash
             let mut buf = [0u8; 64];
@@ -78,51 +90,36 @@ pub fn generate(accounts: Vec<AddressedAccount>, height: usize) -> UncompressedP
             hash(&mut buf);
 
             // Insert hash to map
-            let h = H256::new(array_ref![buf, 0, 32]);
-            map.insert(parent, h);
+            map.insert(parent, H256::new(array_ref![buf, 0, 32]));
 
             // Push parent index to calculate next level
-            index_buffer.push(parent);
+            indexes.push(parent);
         }
 
         position += 1;
     }
 
-    // Sort bit-alphabetically
-    // https://github.com/ethereum/eth2.0-specs/issues/1303
-    indexes.sort_by(|a, b| {
-        // Normalize (e.g. right pad until the the most significant bit in `a` and `b` align)
-        let max = std::cmp::max(a.bits(), b.bits());
+    proof_indexes
+}
 
-        let (a, a_shift) = if a.bits() < max {
-            let shift = max - a.bits();
-            (a.shl(shift), shift)
-        } else {
-            (*a, 0)
-        };
-
-        let (b, b_shift) = if b.bits() < max {
-            let shift = max - b.bits();
-            (b.shl(shift), shift)
-        } else {
-            (*b, 0)
-        };
-        // ---------------------------------
-
-        match a.cmp(&b) {
-            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
-            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
-            std::cmp::Ordering::Equal => a_shift.cmp(&b_shift),
+fn get_or_generate(
+    map: &mut HashMap<U512, H256>,
+    proof_indexes: &mut Vec<U512>,
+    height: usize,
+    index: U512,
+    zero_bits: usize,
+) -> H256 {
+    match map.get(&index) {
+        Some(x) => x.clone(),
+        None => {
+            let mut buf = [0u8; 64];
+            zh(height + 1 - zero_bits, &mut buf);
+            let buf = H256::new(array_ref![buf, 0, 32]);
+            proof_indexes.push(index);
+            map.insert(index, buf.clone());
+            buf
         }
-    });
-
-    let mut values = Vec::<H256>::new();
-
-    for i in indexes.iter() {
-        values.push(map.get(&i).unwrap().clone());
     }
-
-    UncompressedProof { indexes, values }
 }
 
 #[cfg(test)]
