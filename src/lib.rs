@@ -66,7 +66,7 @@ pub fn process_data_blob(blob: &mut [u8], pre_state_root: &[u8; 32]) -> [u8; 32]
 
     // Verify pre_state_root
     let pre_root = mem.root().unwrap();
-    // assert_eq!(pre_state_root, &pre_root);
+    assert_eq!(pre_state_root, &pre_root);
 
     // Proccess all transactions (only transfers for now)
     assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
@@ -74,7 +74,7 @@ pub fn process_data_blob(blob: &mut [u8], pre_state_root: &[u8; 32]) -> [u8; 32]
     mem.root().unwrap()
 }
 
-fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction> {
+pub fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction> {
     unsafe {
         let mut ret = Vec::<Transaction>::new();
 

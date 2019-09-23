@@ -27,7 +27,10 @@ fn main() {
         println!("    - \"{}\"", hex::encode(pre_state));
         println!("shard_blocks:");
         println!("  - env: 0");
-        println!("    data: \"{}\"", hex::encode(blob.to_bytes()));
+        println!(
+            "    data: \"{}\"",
+            hex::encode(blob::generate(config).to_bytes())
+        );
         println!("shard_post_state:");
         println!("  exec_env_states:");
         println!("    - \"{}\"", hex::encode(post_state));
@@ -35,12 +38,8 @@ fn main() {
         println!(
             "{} {} {}",
             hex::encode(pre_state),
-            hex::encode(&blob.to_bytes()),
-            hex::encode(post_state)
+            hex::encode(post_state),
+            hex::encode(blob::generate(config).to_bytes()),
         );
     }
-
-    let s = blob.to_bytes();
-    // assert_eq!(blob.transactions
-    assert_eq!(blob.proof, &s[(4 + blob.transactions.len() * 176)..]);
 }
