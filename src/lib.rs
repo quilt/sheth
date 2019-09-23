@@ -11,15 +11,12 @@ pub mod state;
 pub mod transaction;
 pub mod u264;
 
-#[cfg(feature = "scout")]
 use crate::process::process_transactions;
-#[cfg(feature = "scout")]
 use crate::state::{Backend, InMemoryBackend};
-#[cfg(feature = "scout")]
 use crate::transaction::{Transaction, Transfer};
+
 #[cfg(feature = "scout")]
 use alloc::vec::Vec;
-#[cfg(feature = "scout")]
 use arrayref::array_ref;
 
 #[cfg(not(feature = "std"))]
@@ -47,32 +44,37 @@ pub extern "C" fn main() {
         native::eth2_blockDataCopy(input.as_mut_ptr() as *const u32, 0, input_size as u32);
     }
 
+    // Get pre-state-root
+    let mut pre_state_root = [0u8; 32];
+    unsafe { native::eth2_loadPreStateRoot(pre_state_root.as_mut_ptr() as *const u32) }
+
+    // Process input data
+    let post_root = process_data_blob(&mut input, &pre_state_root);
+
+    // Return post state
+    unsafe { native::eth2_savePostStateRoot(post_root.as_ptr() as *const u32) }
+}
+
+pub fn process_data_blob(blob: &mut [u8], pre_state_root: &[u8; 32]) -> [u8; 32] {
     // Deserialize transactions from byte array. Although this is essentially copying all the
     // transactions, it appears to not have a massive cost. We can optimize later.
-    let tx_count = u32::from_le_bytes(*array_ref!(input, 0, 4)) as usize;
-    let transactions = deserialize_transactions(&input, tx_count);
+    let tx_count = u32::from_le_bytes(*array_ref!(blob, 0, 4)) as usize;
+    let transactions = deserialize_transactions(&blob, tx_count);
 
     // Load multi-merkle proof
-    let mut mem = InMemoryBackend::new(256);
-    assert_eq!(mem.load(&input[4 + (tx_count * 176)..]), Ok(()));
+    let mut mem = InMemoryBackend::new(&mut blob[(4 + tx_count * 176)..], 256);
+
+    // Verify pre_state_root
+    let pre_root = mem.root().unwrap();
+    assert_eq!(pre_state_root, &pre_root);
 
     // Proccess all transactions (only transfers for now)
     assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
 
-    // Calculate pre-state and post-state roots
-    let roots = mem.roots().unwrap();
-
-    // Verify pre-state root == calculated pre-state root
-    let mut pre_state_root = [0u8; 32];
-    unsafe { native::eth2_loadPreStateRoot(pre_state_root.as_mut_ptr() as *const u32) }
-    assert_eq!(pre_state_root, roots.0);
-
-    // Return post state
-    unsafe { native::eth2_savePostStateRoot(roots.1.as_ptr() as *const u32) }
+    mem.root().unwrap()
 }
 
-#[cfg(feature = "scout")]
-fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction> {
+pub fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction> {
     unsafe {
         let mut ret = Vec::<Transaction>::new();
 

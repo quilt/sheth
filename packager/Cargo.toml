@@ -5,7 +5,9 @@ authors = ["Matt Garnett <14004106+lightclient@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
-hex = "0.3.2"
-sheth = { path = "../", features = ["std"], crate-type = ["cdylib"] }
 arrayref = "0.3.5"
 bigint = "4.4.1"
+hex = "0.3.2"
+rand = "0.7"
+sha2 = "0.8.0"
+sheth = { path = "../", features = ["std"] }

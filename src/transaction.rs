@@ -17,28 +17,19 @@ impl Transaction {
         }
     }
 
-    pub fn verify<T>(&self, db: &T) -> Result<(), Error>
-    where
-        T: Backend,
-    {
+    pub fn verify<'a, T: Backend<'a>>(&self, db: &T) -> Result<(), Error> {
         self.verify_signature(db)?;
         self.verify_nonce(db)?;
 
         Ok(())
     }
 
-    pub fn verify_signature<T>(&self, _db: &T) -> Result<(), Error>
-    where
-        T: Backend,
-    {
+    pub fn verify_signature<'a, T: Backend<'a>>(&self, _db: &T) -> Result<(), Error> {
         // TODO: Implement BLS verification
         Ok(())
     }
 
-    pub fn verify_nonce<T>(&self, _db: &T) -> Result<(), Error>
-    where
-        T: Backend,
-    {
+    pub fn verify_nonce<'a, T: Backend<'a>>(&self, _db: &T) -> Result<(), Error> {
         // TODO: Verify nonce
         Ok(())
     }
@@ -52,5 +43,23 @@ pub struct Transfer {
     pub signature: [u8; 96],
 }
 
+#[cfg(feature = "std")]
+impl std::fmt::Debug for Transfer {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{{\n\tto: {:?},\n\tfrom: {:?},\n\tnonce: {},\n\tamount: {},\n\t, signature: {:?}\n}}",
+            self.to,
+            self.from,
+            self.nonce,
+            self.amount,
+            self.signature.to_vec()
+        )
+    }
+}
+
+#[cfg_attr(feature = "std", derive(Debug))]
 pub struct Withdrawal;
+
+#[cfg_attr(feature = "std", derive(Debug))]
 pub struct Deposit;
