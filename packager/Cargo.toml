@@ -10,4 +10,4 @@ bigint = "4.4.1"
 hex = "0.3.2"
 rand = "0.7"
 sha2 = "0.8.0"
-sheth = { path = "../", features = ["std"], crate-type = ["cdylib"] }
+sheth = { path = "../", features = ["std"] }

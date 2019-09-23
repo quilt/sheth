@@ -12,7 +12,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub fn init(args: Vec<String>) -> Self {
+    pub fn init(args: &Vec<String>) -> Self {
         let tree_height = args[1]
             .parse::<usize>()
             .expect("Height should be a number.");

@@ -5,7 +5,13 @@ authors = ["Matt Garnett <14004106+lightclient@users.noreply.github.com>"]
 edition = "2018"
 
 [lib]
+name = "sheth"
 crate-type = ["cdylib", "lib"]
+path = "src/lib.rs"
+
+[[bin]]
+name = "binsheth"
+path = "src/main.rs"
 
 [profile.release]
 lto = true

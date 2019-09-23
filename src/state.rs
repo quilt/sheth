@@ -78,7 +78,7 @@ impl<'a> InMemoryBackend<'a> {
 impl<'a> Backend<'a> for InMemoryBackend<'a> {
     fn new(data: &'a mut [u8], height: usize) -> Self {
         // Read the number of offsets
-        let length = usize::from_le_bytes(*array_ref![data, 0, 8]);
+        let length = u64::from_le_bytes(*array_ref![data, 0, 8]) as usize;
 
         // Grab the offsets slice
         let begin = 8;
