@@ -138,7 +138,7 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
 
     fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
         // `value_index = (first_leaf + account) * 4 + 2`
-        let index = ((((U264::one() << self.height) + address.into()) << 2) + 2.into()) << 1;
+        let index = address_to_value_index(address, self.height);
         let chunk = self.get(index);
 
         let value = u64::from_le_bytes(*array_ref![&chunk, 0, 8]);
@@ -157,7 +157,7 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
 
     fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
         // `value_index = (first_leaf + account) * 4 + 2`
-        let index = ((((U264::one() << self.height) + address.into()) << 2) + 2.into()) << 1;
+        let index = address_to_value_index(address, self.height);
         let chunk = self.get(index);
 
         let value = u64::from_le_bytes(*array_ref![chunk, 0, 8]);
@@ -192,6 +192,11 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
 
         Ok(nonce)
     }
+}
+
+#[inline]
+pub fn address_to_value_index(address: Address, height: usize) -> U264 {
+    ((((U264::one() << height) + address.into()) << 2) + 2.into()) << 1
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use crate::accounts::random_accounts;
+use crate::accounts::{random_accounts, AddressedAccount};
 use crate::proof::offsets::calculate as calculate_offsets;
 use crate::proof::uncompressed::generate as generate_uncompressed_proof;
 use crate::transactions;
@@ -7,6 +7,7 @@ use sheth::transaction::Transaction;
 pub struct Blob {
     pub proof: Vec<u8>,
     pub transactions: Vec<Transaction>,
+    pub accounts: Vec<AddressedAccount>,
 }
 
 impl Blob {
@@ -21,7 +22,7 @@ pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blo
     let accounts = random_accounts(accounts, tree_height);
     let proof = generate_uncompressed_proof(accounts.clone(), tree_height);
     let offsets = calculate_offsets(proof.indexes);
-    let transactions = transactions::generate(transactions, accounts);
+    let transactions = transactions::generate(transactions, accounts.clone());
 
     let mut compressed_proof = offsets.iter().fold(vec![], |mut acc, x| {
         acc.extend(&x.to_le_bytes());
@@ -36,6 +37,7 @@ pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blo
     Blob {
         proof: compressed_proof,
         transactions,
+        accounts,
     }
 }
 
