@@ -36,7 +36,7 @@ pub fn random_accounts(n: usize, height: usize) -> Vec<AddressedAccount> {
             Account {
                 pubkey,
                 nonce: rng.gen(),
-                value: rng.gen(),
+                value: rng.gen_range(1, 1000),
             },
         ));
 
