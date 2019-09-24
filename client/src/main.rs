@@ -2,6 +2,7 @@
 extern crate clap;
 
 mod accounts;
+mod client;
 mod package;
 mod proof;
 mod transactions;
@@ -41,6 +42,23 @@ fn main() {
                         .help("When set, the output will be in the format of a Scout YAML file"),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("start")
+                .about("Starts a Sheth client")
+                .arg(
+                    Arg::with_name("accounts")
+                        .required(true)
+                        .help("number of accounts that will be represented in the proof"),
+                )
+                .arg(
+                    Arg::with_name("depth")
+                        .long("depth")
+                        .short("d")
+                        .takes_value(true)
+                        .default_value("256")
+                        .help("defines the depth of sparse state structure"),
+                ),
+        )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("package") {
@@ -50,5 +68,12 @@ fn main() {
         let scout = matches.is_present("scout");
 
         package::build(accounts, txs, depth, scout);
+    }
+
+    if let Some(matches) = matches.subcommand_matches("start") {
+        let accounts = value_t!(matches.value_of("accounts"), usize).unwrap_or_else(|e| e.exit());
+        let depth = value_t!(matches.value_of("depth"), usize).unwrap_or_else(|e| e.exit());
+
+        client::start(accounts, depth);
     }
 }
