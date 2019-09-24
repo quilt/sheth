@@ -4,35 +4,6 @@ use crate::proof::uncompressed::generate as generate_uncompressed_proof;
 use crate::transactions;
 use sheth::transaction::Transaction;
 
-#[derive(Clone, Copy, Debug)]
-pub struct Configuration {
-    pub accounts: usize,
-    pub transactions: usize,
-    pub tree_height: usize,
-}
-
-impl Configuration {
-    pub fn init(args: &Vec<String>) -> Self {
-        let tree_height = args[1]
-            .parse::<usize>()
-            .expect("Height should be a number.");
-
-        let accounts = args[2]
-            .parse::<usize>()
-            .expect("Account count should be a number.");
-
-        let transactions = args[3]
-            .parse::<usize>()
-            .expect("Transaction count should be a number.");
-
-        Configuration {
-            accounts,
-            transactions,
-            tree_height,
-        }
-    }
-}
-
 pub struct Blob {
     pub proof: Vec<u8>,
     pub transactions: Vec<Transaction>,
@@ -46,11 +17,11 @@ impl Blob {
     }
 }
 
-pub fn generate(config: Configuration) -> Blob {
-    let accounts = random_accounts(config.accounts, config.tree_height);
-    let proof = generate_uncompressed_proof(accounts.clone(), config.tree_height);
+pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blob {
+    let accounts = random_accounts(accounts, tree_height);
+    let proof = generate_uncompressed_proof(accounts.clone(), tree_height);
     let offsets = calculate_offsets(proof.indexes);
-    let transactions = transactions::generate(config.transactions, accounts);
+    let transactions = transactions::generate(transactions, accounts);
 
     let mut compressed_proof = offsets.iter().fold(vec![], |mut acc, x| {
         acc.extend(&x.to_le_bytes());
@@ -96,13 +67,7 @@ mod test {
             211, 52, 50, 189, 96, 107, 228, 122, 11, 68, 182, 28,
         ];
 
-        let config = Configuration {
-            accounts: 1,
-            transactions: 0,
-            tree_height: 1,
-        };
-
-        assert_eq!(generate(config).to_bytes(), proof);
+        assert_eq!(generate(1, 0, 1).to_bytes(), proof);
         let mut mem = InMemoryBackend::new(&mut proof[4..], 1);
         assert_eq!(mem.root(), Ok(*array_ref![root, 0, 32]));
     }
