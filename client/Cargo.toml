@@ -1,5 +1,5 @@
 [package]
-name = "packager"
+name = "client"
 version = "0.1.0"
 authors = ["Matt Garnett <14004106+lightclient@users.noreply.github.com>"]
 edition = "2018"
@@ -7,7 +7,9 @@ edition = "2018"
 [dependencies]
 arrayref = "0.3.5"
 bigint = "4.4.1"
+clap = "2.33.0"
 hex = "0.3.2"
+dialoguer = "0.4.0"
 rand = "0.7"
 sha2 = "0.8.0"
 sheth = { path = "../", features = ["std"] }

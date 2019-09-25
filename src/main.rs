@@ -1,10 +1,9 @@
 use arrayref::array_ref;
 use sheth::process_data_blob;
 use std::fs;
-use std::io::{self, Read};
 
 pub fn main() {
-    let mut input = fs::read_to_string("blob").expect("File to exist");
+    let input = fs::read_to_string("blob").expect("File to exist");
 
     let args: Vec<&str> = input.split_whitespace().collect();
     let pre_state_root = hex::decode(args[0]).unwrap();
