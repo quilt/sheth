@@ -25,13 +25,7 @@ pub fn parse_balance(balance_args: Vec<&str>) -> Result<BalanceCmd, Error> {
         return Err(Error::ArgumentsIncorrect(balance_args.join(" ")));
     }
 
-    let raw_address = if balance_args[0].len() > 2 && &balance_args[0][0..2] == "0x" {
-        &balance_args[0][2..]
-    } else {
-        &balance_args[0]
-    };
-
-    let address = parse_address(raw_address)?;
+    let address = parse_address(balance_args[0])?;
 
     Ok(BalanceCmd { address })
 }
@@ -51,6 +45,12 @@ pub fn parse_send(send_args: Vec<&str>) -> Result<SendCmd, Error> {
 }
 
 pub fn parse_address(s: &str) -> Result<U256, Error> {
+    let s = if s.len() > 2 && &s[0..2] == "0x" {
+        &s[2..]
+    } else {
+        &s
+    };
+
     let bytes = hex::decode(s).map_err(|_| Error::AddressInvalid(s.to_string()))?;
 
     if bytes.len() != 32 {

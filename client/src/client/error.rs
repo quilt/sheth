@@ -4,4 +4,5 @@ pub enum Error {
     AmountInvalid(String),
     AddressInvalid(String),
     ArgumentsIncorrect(String),
+    TransactionFailed(String),
 }
