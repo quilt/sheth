@@ -1,25 +1,22 @@
-use super::command::{AccountsCmd, BalanceCmd, Command, SendCmd};
+use super::command::{AccountsCmd, BalanceCmd, Command, TransferCmd};
 use super::error::Error;
 use arrayref::array_ref;
 use bigint::U256;
 
+/// Parse a given string and return the resulting `Command` or `Error`.
 pub fn parse_command(command: String) -> Result<Command, Error> {
     let command: Vec<&str> = command.split_whitespace().collect();
 
-    if command.len() < 1 {
-        // should error
-        unimplemented!()
-    }
-
     match command[0] {
         "balance" | "b" => Ok(Command::Balance(parse_balance(command[1..].to_vec())?)),
-        "send" | "s" => Ok(Command::Send(parse_send(command[1..].to_vec())?)),
+        "transfer" | "t" => Ok(Command::Transfer(parse_transfer(command[1..].to_vec())?)),
         "accounts" | "a" => Ok(Command::Accounts(parse_accounts(command[1..].to_vec())?)),
         "exit" | "e" => Ok(Command::Exit),
         _ => Err(Error::CommandUnknown(command[0].to_string())),
     }
 }
 
+/// Parse the arguments for the balance command to determine the address to look up.
 pub fn parse_balance(balance_args: Vec<&str>) -> Result<BalanceCmd, Error> {
     if balance_args.len() != 1 {
         return Err(Error::ArgumentsIncorrect(balance_args.join(" ")));
@@ -30,21 +27,34 @@ pub fn parse_balance(balance_args: Vec<&str>) -> Result<BalanceCmd, Error> {
     Ok(BalanceCmd { address })
 }
 
-pub fn parse_send(send_args: Vec<&str>) -> Result<SendCmd, Error> {
-    if send_args.len() != 3 {
-        return Err(Error::ArgumentsIncorrect(send_args.join(" ")));
+/// Parse the arguments for the transfer command to determine the values of the transaction that
+/// will be built.
+pub fn parse_transfer(transfer_args: Vec<&str>) -> Result<TransferCmd, Error> {
+    if transfer_args.len() != 3 {
+        return Err(Error::ArgumentsIncorrect(transfer_args.join(" ")));
     }
 
-    let from = parse_address(send_args[0])?;
-    let to = parse_address(send_args[1])?;
-    let amount = send_args[2]
+    let from = parse_address(transfer_args[0])?;
+    let to = parse_address(transfer_args[1])?;
+    let amount = transfer_args[2]
         .parse::<u64>()
-        .map_err(|_| Error::AmountInvalid(send_args[2].to_string()))?;
+        .map_err(|_| Error::AmountInvalid(transfer_args[2].to_string()))?;
 
-    Ok(SendCmd { from, to, amount })
+    Ok(TransferCmd { from, to, amount })
 }
 
+/// Ensure that no arguments were given to the accounts command.
+pub fn parse_accounts(accounts_args: Vec<&str>) -> Result<AccountsCmd, Error> {
+    if accounts_args.len() > 0 {
+        return Err(Error::ArgumentsIncorrect(accounts_args.join(" ")));
+    }
+
+    Ok(AccountsCmd())
+}
+
+/// Parse a hex string into a U256 value or return `Error`.
 pub fn parse_address(s: &str) -> Result<U256, Error> {
+    // If the address is prepended by `"0x"`, strip it.
     let s = if s.len() > 2 && &s[0..2] == "0x" {
         &s[2..]
     } else {
@@ -58,19 +68,4 @@ pub fn parse_address(s: &str) -> Result<U256, Error> {
     } else {
         Ok(U256::from(array_ref![bytes, 0, 32]))
     }
-}
-
-pub fn parse_accounts(accounts_args: Vec<&str>) -> Result<AccountsCmd, Error> {
-    if accounts_args.len() > 0 {
-        return Err(Error::ArgumentsIncorrect(accounts_args.join(" ")));
-    }
-
-    Ok(AccountsCmd())
-}
-
-mod test {
-    use super::*;
-
-    #[test]
-    fn parse_address() {}
 }

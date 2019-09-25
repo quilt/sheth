@@ -3,7 +3,7 @@ pub mod blob;
 use sheth::process::process_transactions;
 use sheth::state::{Backend, InMemoryBackend};
 
-pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) {
+pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -> String {
     let initial_blob = blob::generate(accounts, transactions, height);
     let mut blob = blob::generate(accounts, transactions, height);
 
@@ -14,24 +14,30 @@ pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) {
     let post_state = mem.root().unwrap();
 
     if scout {
-        println!("beacon_state:");
-        println!("  execution_scripts:");
-        println!("    - scout/sheth.wasm");
-        println!("shard_pre_state:");
-        println!("  exec_env_states:");
-        println!("    - \"{}\"", hex::encode(pre_state));
-        println!("shard_blocks:");
-        println!("  - env: 0");
-        println!("    data: \"{}\"", hex::encode(initial_blob.to_bytes()));
-        println!("shard_post_state:");
-        println!("  exec_env_states:");
-        println!("    - \"{}\"", hex::encode(post_state));
+        format!(
+            "\
+        beacon_state:
+            execution_scripts:
+                - scout/sheth.wasm
+            shard_pre_state:
+              exec_env_states:
+                - \"{}\",
+            shard_blocks:
+              - env: 0
+                data: \"{}\",
+            shard_post_state:
+              exec_env_states:
+                - \"{}\"",
+            hex::encode(pre_state),
+            hex::encode(initial_blob.to_bytes()),
+            hex::encode(post_state)
+        )
     } else {
-        println!(
+        format!(
             "{} {} {}",
             hex::encode(pre_state),
             hex::encode(post_state),
             hex::encode(initial_blob.to_bytes()),
-        );
+        )
     }
 }
