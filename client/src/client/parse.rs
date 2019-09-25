@@ -25,7 +25,7 @@ pub fn parse_balance(balance_args: Vec<&str>) -> Result<BalanceCmd, Error> {
         return Err(Error::ArgumentsIncorrect(balance_args.join(" ")));
     }
 
-    let raw_address = if &balance_args[0][0..2] == "0x" {
+    let raw_address = if balance_args[0].len() > 2 && &balance_args[0][0..2] == "0x" {
         &balance_args[0][2..]
     } else {
         &balance_args[0]
