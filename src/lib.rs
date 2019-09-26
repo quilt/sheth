@@ -5,6 +5,7 @@ extern crate qimalloc;
 
 pub mod account;
 pub mod address;
+pub mod bls;
 pub mod error;
 pub mod hash;
 pub mod process;

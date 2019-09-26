@@ -37,7 +37,7 @@ pub fn init_multiproof(accounts: Vec<AddressedAccount>, height: usize) -> HashMa
 
         // Copy the values of the account into a buffer
         let mut buf = [0u8; 128];
-        buf[0..48].copy_from_slice(&account.pubkey);
+        buf[0..48].copy_from_slice(&account.pubkey.as_bytes());
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
         buf[96..104].copy_from_slice(&account.value.to_le_bytes());
 
@@ -127,6 +127,7 @@ mod test {
     use super::*;
     use crate::proof::h256::zh;
     use sheth::account::Account;
+    use sheth::bls::PublicKey;
 
     #[test]
     fn one_bit_tree() {
@@ -147,13 +148,13 @@ mod test {
         //    pk[0..32]
 
         let account = Account {
-            pubkey: [1u8; 48],
+            pubkey: PublicKey::one(),
             nonce: 123,
             value: 42,
         };
 
         let mut buf = [0u8; 128];
-        buf[0..48].copy_from_slice(&account.pubkey);
+        buf[0..48].copy_from_slice(&account.pubkey.as_bytes());
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
         buf[96..104].copy_from_slice(&account.value.to_le_bytes());
 
@@ -228,13 +229,13 @@ mod test {
         //                        pk[0..32]
 
         let account = Account {
-            pubkey: [2u8; 48],
+            pubkey: PublicKey::one(),
             nonce: 42,
             value: 123,
         };
 
         let mut buf = [0u8; 128];
-        buf[0..48].copy_from_slice(&account.pubkey);
+        buf[0..48].copy_from_slice(&account.pubkey.as_bytes());
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
         buf[96..104].copy_from_slice(&account.value.to_le_bytes());
 

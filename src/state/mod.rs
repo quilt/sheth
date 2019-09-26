@@ -1,6 +1,10 @@
 pub mod multiproof;
-
 pub use multiproof::Multiproof;
+
+#[cfg(test)]
+pub mod mock;
+#[cfg(test)]
+pub use mock::MockState;
 
 use crate::address::Address;
 use crate::error::Error;
@@ -18,10 +22,7 @@ use crate::hash::H256;
 ///         / \    / \
 ///        0   1  n n+1   <= account roots
 /// ```
-pub trait State<'a> {
-    /// Instantiates a new `Backend`.
-    fn new(db: &'a mut [u8], height: usize) -> Self;
-
+pub trait State {
     /// Calculates the root before making changes to the structure and after in one pass.
     fn root(&mut self) -> Result<H256, Error>;
 

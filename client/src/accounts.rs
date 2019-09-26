@@ -2,6 +2,7 @@ use bigint::U256;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use sha2::{Digest, Sha256};
 use sheth::account::Account;
+use sheth::bls::PublicKey;
 use std::collections::HashMap;
 
 #[derive(Clone)]
@@ -34,7 +35,7 @@ pub fn random_accounts(n: usize, height: usize) -> Vec<AddressedAccount> {
         acc.push(AddressedAccount(
             address,
             Account {
-                pubkey,
+                pubkey: PublicKey::new(pubkey),
                 nonce: rng.gen(),
                 value: rng.gen_range(1, 1000),
             },
@@ -55,10 +56,10 @@ mod test {
         for AddressedAccount(address, account) in accounts {
             assert_eq!(
                 address,
-                U256::from(Sha256::digest(&account.pubkey).as_ref())
+                U256::from(Sha256::digest(&account.pubkey.as_bytes()).as_ref())
             );
 
-            assert_ne!(account.pubkey.to_vec(), [0u8; 48].to_vec());
+            assert_ne!(account.pubkey.as_bytes().to_vec(), [0u8; 48].to_vec());
             assert_ne!(account.nonce, 0);
             assert_ne!(account.value, 0);
         }

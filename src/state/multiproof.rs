@@ -13,6 +13,27 @@ pub struct Multiproof<'a> {
 }
 
 impl<'a> Multiproof<'a> {
+    pub fn new(data: &'a mut [u8], height: usize) -> Self {
+        // Read the number of offsets
+        let length = u64::from_le_bytes(*array_ref![data, 0, 8]) as usize;
+
+        // Grab the offsets slice
+        let begin = 8;
+        let end = length * 8;
+        let offsets = &data[begin..end];
+
+        // Grab the proof slice as mutable
+        let begin = end;
+        let end = begin + length * 32;
+        let db = unsafe { &mut *(&data[begin..end] as *const [u8] as *mut [u8]) };
+
+        Self {
+            offsets,
+            db,
+            height,
+        }
+    }
+
     // TODO: add debug check that operations are occuring only on
     // leaf nodes
     pub fn get(&self, index: U264) -> H256 {
@@ -47,28 +68,7 @@ impl<'a> Multiproof<'a> {
     }
 }
 
-impl<'a> State<'a> for Multiproof<'a> {
-    fn new(data: &'a mut [u8], height: usize) -> Self {
-        // Read the number of offsets
-        let length = u64::from_le_bytes(*array_ref![data, 0, 8]) as usize;
-
-        // Grab the offsets slice
-        let begin = 8;
-        let end = length * 8;
-        let offsets = &data[begin..end];
-
-        // Grab the proof slice as mutable
-        let begin = end;
-        let end = begin + length * 32;
-        let db = unsafe { &mut *(&data[begin..end] as *const [u8] as *mut [u8]) };
-
-        Self {
-            offsets,
-            db,
-            height,
-        }
-    }
-
+impl<'a> State for Multiproof<'a> {
     fn root(&mut self) -> Result<[u8; 32], Error> {
         let offsets = unsafe {
             core::slice::from_raw_parts(self.offsets.as_ptr() as *const u64, self.offsets.len() / 8)

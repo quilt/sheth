@@ -1,7 +1,7 @@
 use crate::u264::U264;
 use bigint::{U256, U512};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Address(U256);
 
 impl Address {

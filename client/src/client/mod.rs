@@ -6,7 +6,7 @@ use crate::package::blob;
 use command::Command;
 use dialoguer::{theme::CustomPromptCharacterTheme, Input};
 use parse::parse_command;
-use sheth::state::{Multiproof, State};
+use sheth::state::Multiproof;
 use std::io;
 use std::io::prelude::*;
 

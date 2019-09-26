@@ -5,6 +5,6 @@ pub enum Error {
     SignatureInvalid,
     NonceInvalid,
     BalanceInsufficient,
-    ChunkNotLoaded(U264),
+    StateIncomplete(U264),
     Overflow,
 }

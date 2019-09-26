@@ -25,19 +25,19 @@ impl Transaction {
         }
     }
 
-    pub fn verify<'a, T: State<'a>>(&self, db: &T) -> Result<(), Error> {
+    pub fn verify<'a, T: State>(&self, db: &T) -> Result<(), Error> {
         self.verify_signature(db)?;
         self.verify_nonce(db)?;
 
         Ok(())
     }
 
-    pub fn verify_signature<'a, T: State<'a>>(&self, _db: &T) -> Result<(), Error> {
+    pub fn verify_signature<'a, T: State>(&self, _db: &T) -> Result<(), Error> {
         // TODO: Implement BLS verification
         Ok(())
     }
 
-    pub fn verify_nonce<'a, T: State<'a>>(&self, db: &T) -> Result<(), Error> {
+    pub fn verify_nonce<'a, T: State>(&self, db: &T) -> Result<(), Error> {
         let nonce = db.nonce(self.from())?;
 
         if nonce == self.nonce() {
