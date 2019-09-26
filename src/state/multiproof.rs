@@ -1,57 +1,39 @@
 use crate::account::{calc_nonce_index, calc_value_index};
 use crate::address::Address;
 use crate::error::Error;
-use crate::hash::hash;
+use crate::hash::{hash, H256};
+use crate::state::State;
 use crate::u264::U264;
 use arrayref::{array_mut_ref, array_ref};
 
-type H256 = [u8; 32];
-
-/// Interface for interacting with the state's Sparse Merkle Tree (SMT).
-///
-/// The SMT can be modeled as a `FixedVector[Account, 2**256]`. It's merkle tree structure is as
-/// follows:
-///
-/// ```text
-///            root
-///           /    \
-///         ...    ...    <= intermediate nodes
-///         / \    / \
-///        0   1  n n+1   <= account roots
-/// ```
-pub trait Backend<'a> {
-    /// Instantiates a new `Backend`.
-    fn new(db: &'a mut [u8], height: usize) -> Self;
-
-    /// Returns the height of the tree backing the db.
-    fn height(&self) -> usize;
-
-    /// Calculates the root before making changes to the structure and after in one pass.
-    fn root(&mut self) -> Result<H256, Error>;
-
-    /// Returns the value of a specified address.
-    fn value(&self, address: Address) -> Result<u64, Error>;
-
-    /// Returns the nonce of a specified address.
-    fn nonce(&self, address: Address) -> Result<u64, Error>;
-
-    /// Increase the value of an account at `address`.
-    fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error>;
-
-    /// Decrease the value of an account at `address`.
-    fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error>;
-
-    /// Increment the `nonce` of the account at `address` by `1`.
-    fn inc_nonce(&mut self, address: Address) -> Result<u64, Error>;
-}
-
-pub struct InMemoryBackend<'a> {
+pub struct Multiproof<'a> {
     pub offsets: &'a [u8],
     pub db: &'a mut [u8],
     pub height: usize,
 }
 
-impl<'a> InMemoryBackend<'a> {
+impl<'a> Multiproof<'a> {
+    pub fn new(data: &'a mut [u8], height: usize) -> Self {
+        // Read the number of offsets
+        let length = u64::from_le_bytes(*array_ref![data, 0, 8]) as usize;
+
+        // Grab the offsets slice
+        let begin = 8;
+        let end = length * 8;
+        let offsets = &data[begin..end];
+
+        // Grab the proof slice as mutable
+        let begin = end;
+        let end = begin + length * 32;
+        let db = unsafe { &mut *(&data[begin..end] as *const [u8] as *mut [u8]) };
+
+        Self {
+            offsets,
+            db,
+            height,
+        }
+    }
+
     // TODO: add debug check that operations are occuring only on
     // leaf nodes
     pub fn get(&self, index: U264) -> H256 {
@@ -86,32 +68,7 @@ impl<'a> InMemoryBackend<'a> {
     }
 }
 
-impl<'a> Backend<'a> for InMemoryBackend<'a> {
-    fn new(data: &'a mut [u8], height: usize) -> Self {
-        // Read the number of offsets
-        let length = u64::from_le_bytes(*array_ref![data, 0, 8]) as usize;
-
-        // Grab the offsets slice
-        let begin = 8;
-        let end = length * 8;
-        let offsets = &data[begin..end];
-
-        // Grab the proof slice as mutable
-        let begin = end;
-        let end = begin + length * 32;
-        let db = unsafe { &mut *(&data[begin..end] as *const [u8] as *mut [u8]) };
-
-        Self {
-            offsets,
-            db,
-            height,
-        }
-    }
-
-    fn height(&self) -> usize {
-        self.height
-    }
-
+impl<'a> State for Multiproof<'a> {
     fn root(&mut self) -> Result<[u8; 32], Error> {
         let offsets = unsafe {
             core::slice::from_raw_parts(self.offsets.as_ptr() as *const u64, self.offsets.len() / 8)
@@ -284,7 +241,7 @@ mod test {
 
         offsets.extend(vec![0u8; 32 * 4]);
 
-        let mem = InMemoryBackend::new(&mut offsets, 1);
+        let mem = Multiproof::new(&mut offsets, 1);
 
         assert_eq!(mem.lookup((10 << 1).into()), 1);
         assert_eq!(mem.lookup((11 << 1).into()), 2);
@@ -295,7 +252,7 @@ mod test {
     #[test]
     fn lookup_single_account() {
         let mut proof = get_proof();
-        let mem = InMemoryBackend::new(&mut proof, 1);
+        let mem = Multiproof::new(&mut proof, 1);
 
         assert_eq!(mem.lookup((9 << 1).into()), 2);
         assert_eq!(mem.lookup((10 << 1).into()), 3);
@@ -318,7 +275,7 @@ mod test {
 
         offsets.extend(vec![0u8; 32 * 7]);
 
-        let mem = InMemoryBackend::new(&mut offsets, 1);
+        let mem = Multiproof::new(&mut offsets, 1);
 
         for i in 0..7 {
             assert_eq!(mem.lookup(((i + 8) << 1).into()), i as usize);
@@ -328,7 +285,7 @@ mod test {
     #[test]
     fn add_value() {
         let mut proof = get_proof();
-        let mut mem = InMemoryBackend::new(&mut proof, 1);
+        let mut mem = Multiproof::new(&mut proof, 1);
 
         assert_eq!(mem.add_value(0.into(), 1), Ok(2));
         assert_eq!(mem.get((10 << 1).into()), h256(2));
@@ -337,7 +294,7 @@ mod test {
     #[test]
     fn sub_value() {
         let mut proof = get_proof();
-        let mut mem = InMemoryBackend::new(&mut proof, 1);
+        let mut mem = Multiproof::new(&mut proof, 1);
 
         assert_eq!(mem.sub_value(0.into(), 1), Ok(0));
         assert_eq!(mem.get((10 << 1).into()), h256(0));
@@ -346,7 +303,7 @@ mod test {
     #[test]
     fn inc_nonce() {
         let mut proof = get_proof();
-        let mut mem = InMemoryBackend::new(&mut proof, 1);
+        let mut mem = Multiproof::new(&mut proof, 1);
 
         assert_eq!(mem.inc_nonce(0.into()), Ok(2));
         assert_eq!(mem.get((11 << 1).into()), h256(2));
@@ -358,7 +315,7 @@ mod test {
         let offsets: Vec<u64> = vec![4, 3, 1, 1];
         let proof = vec![zh(1), zh(0), zh(0), zh(2)];
         let mut data = build_data(offsets, proof);
-        let mut mem = InMemoryBackend::new(&mut data, 1);
+        let mut mem = Multiproof::new(&mut data, 1);
         assert_eq!(mem.root(), Ok(zh(3)))
     }
 
@@ -368,7 +325,7 @@ mod test {
         let offsets: Vec<u64> = vec![8, 4, 2, 1, 1, 2, 1, 1];
         let proof = vec![zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0), zh(0)];
         let mut data = build_data(offsets, proof);
-        let mut mem = InMemoryBackend::new(&mut data, 1);
+        let mut mem = Multiproof::new(&mut data, 1);
         assert_eq!(mem.root(), Ok(zh(3)))
     }
 
@@ -393,7 +350,7 @@ mod test {
         ];
 
         let mut data = build_data(offsets, proof);
-        let mut mem = InMemoryBackend::new(&mut data, 1);
+        let mut mem = Multiproof::new(&mut data, 1);
         assert_eq!(mem.root(), Ok(zh(12)))
     }
 }

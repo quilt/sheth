@@ -2,7 +2,7 @@ use super::error::Error;
 use crate::accounts::AddressedAccount;
 use bigint::U256;
 use sheth::process::process_transactions;
-use sheth::state::{Backend, InMemoryBackend};
+use sheth::state::{Multiproof, State};
 use sheth::transaction::{Transaction, Transfer};
 
 /// A enum that describes the possible commands a user might send to the client and their required
@@ -30,7 +30,7 @@ pub struct TransferCmd {
 pub struct AccountsCmd();
 
 impl BalanceCmd {
-    pub fn execute(&self, db: &InMemoryBackend) -> Result<(), Error> {
+    pub fn execute(&self, db: &Multiproof) -> Result<(), Error> {
         let value = db
             .value(self.address.into())
             .map_err(|_| Error::AddressUnknown("".to_string()))?;
@@ -42,7 +42,7 @@ impl BalanceCmd {
 }
 
 impl TransferCmd {
-    pub fn execute(&self, db: &mut InMemoryBackend) -> Result<(), Error> {
+    pub fn execute(&self, db: &mut Multiproof) -> Result<(), Error> {
         let nonce = db
             .nonce(self.from.into())
             .map_err(|_| Error::AddressUnknown("".to_string()))?;

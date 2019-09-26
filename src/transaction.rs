@@ -1,6 +1,6 @@
 use crate::address::Address;
 use crate::error::Error;
-use crate::state::Backend;
+use crate::state::State;
 
 pub enum Transaction {
     Transfer(Transfer),
@@ -25,19 +25,19 @@ impl Transaction {
         }
     }
 
-    pub fn verify<'a, T: Backend<'a>>(&self, db: &T) -> Result<(), Error> {
+    pub fn verify<'a, T: State>(&self, db: &T) -> Result<(), Error> {
         self.verify_signature(db)?;
         self.verify_nonce(db)?;
 
         Ok(())
     }
 
-    pub fn verify_signature<'a, T: Backend<'a>>(&self, _db: &T) -> Result<(), Error> {
+    pub fn verify_signature<'a, T: State>(&self, _db: &T) -> Result<(), Error> {
         // TODO: Implement BLS verification
         Ok(())
     }
 
-    pub fn verify_nonce<'a, T: Backend<'a>>(&self, db: &T) -> Result<(), Error> {
+    pub fn verify_nonce<'a, T: State>(&self, db: &T) -> Result<(), Error> {
         let nonce = db.nonce(self.from())?;
 
         if nonce == self.nonce() {
@@ -80,6 +80,11 @@ pub struct Deposit;
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::account::Account;
+    use crate::address::Address;
+    use crate::bls::PublicKey;
+    use crate::state::MockState;
+    use std::collections::BTreeMap;
 
     fn build_transfer() -> Transaction {
         Transaction::Transfer(Transfer {
@@ -101,5 +106,26 @@ mod test {
     fn general_nonce() {
         let transfer = build_transfer();
         assert_eq!(transfer.nonce(), 3);
+    }
+
+    #[test]
+    fn verify_nonce() {
+        let transfer = build_transfer();
+        let mut accounts: BTreeMap<Address, Account> = BTreeMap::new();
+
+        accounts.insert(1.into(), Account::zero());
+        let mem = MockState::new(accounts.clone());
+        assert_eq!(transfer.verify_nonce(&mem), Err(Error::NonceInvalid));
+
+        accounts.insert(
+            1.into(),
+            Account {
+                pubkey: PublicKey::zero(),
+                nonce: 3,
+                value: 0,
+            },
+        );
+        let mem = MockState::new(accounts);
+        assert_eq!(transfer.verify_nonce(&mem), Ok(()));
     }
 }

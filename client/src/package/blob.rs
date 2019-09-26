@@ -45,7 +45,7 @@ pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blo
 mod test {
     use super::*;
     use arrayref::array_ref;
-    use sheth::state::{Backend, InMemoryBackend};
+    use sheth::state::{Multiproof, State};
 
     #[test]
     fn generate_small_tree() {
@@ -70,7 +70,7 @@ mod test {
         ];
 
         assert_eq!(generate(1, 0, 1).to_bytes(), proof);
-        let mut mem = InMemoryBackend::new(&mut proof[4..], 1);
+        let mut mem = Multiproof::new(&mut proof[4..], 1);
         assert_eq!(mem.root(), Ok(*array_ref![root, 0, 32]));
     }
 }

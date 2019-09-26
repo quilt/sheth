@@ -6,7 +6,7 @@ use crate::package::blob;
 use command::Command;
 use dialoguer::{theme::CustomPromptCharacterTheme, Input};
 use parse::parse_command;
-use sheth::state::{Backend, InMemoryBackend};
+use sheth::state::Multiproof;
 use std::io;
 use std::io::prelude::*;
 
@@ -19,7 +19,7 @@ pub fn start(accounts: usize, tree_height: usize) {
     let blob = blob::generate(accounts, 0, tree_height);
     let accounts = blob.accounts;
     let mut proof = blob.proof;
-    let mut db = InMemoryBackend::new(&mut proof, tree_height);
+    let mut db = Multiproof::new(&mut proof, tree_height);
 
     println!("Ok.\n");
 

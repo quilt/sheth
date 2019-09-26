@@ -1,13 +1,13 @@
 pub mod blob;
 
 use sheth::process::process_transactions;
-use sheth::state::{Backend, InMemoryBackend};
+use sheth::state::{Multiproof, State};
 
 pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -> String {
     let initial_blob = blob::generate(accounts, transactions, height);
     let mut blob = blob::generate(accounts, transactions, height);
 
-    let mut mem = InMemoryBackend::new(&mut blob.proof, height);
+    let mut mem = Multiproof::new(&mut blob.proof, height);
 
     let pre_state = mem.root().unwrap();
     assert_eq!(process_transactions(&mut mem, &blob.transactions), Ok(()));
@@ -16,18 +16,18 @@ pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -
     if scout {
         format!(
             "\
-        beacon_state:
-            execution_scripts:
-                - scout/sheth.wasm
-            shard_pre_state:
-              exec_env_states:
-                - \"{}\",
-            shard_blocks:
-              - env: 0
-                data: \"{}\",
-            shard_post_state:
-              exec_env_states:
-                - \"{}\"",
+beacon_state:
+    execution_scripts:
+        - scout/sheth.wasm
+shard_pre_state:
+    exec_env_states:
+        - \"{}\"
+shard_blocks:
+    - env: 0
+      data: \"{}\"
+shard_post_state:
+    exec_env_states:
+        - \"{}\"",
             hex::encode(pre_state),
             hex::encode(initial_blob.to_bytes()),
             hex::encode(post_state)

@@ -1,4 +1,5 @@
 use crate::address::Address;
+use crate::bls::PublicKey;
 use crate::u264::U264;
 
 ///  Account merkle tree schema:
@@ -11,8 +12,9 @@ use crate::u264::U264;
 ///         nonce   value
 /// ```
 #[derive(Clone)]
+#[cfg_attr(feature = "std", derive(Hash))]
 pub struct Account {
-    pub pubkey: [u8; 48],
+    pub pubkey: PublicKey,
     pub nonce: u64,
     pub value: u64,
 }
@@ -20,7 +22,7 @@ pub struct Account {
 impl Account {
     pub fn zero() -> Self {
         Account {
-            pubkey: [0u8; 48],
+            pubkey: PublicKey::zero(),
             nonce: 0,
             value: 0,
         }
