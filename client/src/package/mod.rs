@@ -17,18 +17,18 @@ pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -
     if scout {
         format!(
             "\
-        beacon_state:
-            execution_scripts:
-                - scout/sheth.wasm
-            shard_pre_state:
-              exec_env_states:
-                - \"{}\",
-            shard_blocks:
-              - env: 0
-                data: \"{}\",
-            shard_post_state:
-              exec_env_states:
-                - \"{}\"",
+beacon_state:
+    execution_scripts:
+        - scout/sheth.wasm
+shard_pre_state:
+    exec_env_states:
+        - \"{}\"
+shard_blocks:
+    - env: 0
+      data: \"{}\"
+shard_post_state:
+    exec_env_states:
+        - \"{}\"",
             hex::encode(pre_state),
             hex::encode(initial_blob.to_bytes()),
             hex::encode(post_state)
