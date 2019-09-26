@@ -1,4 +1,5 @@
-use crate::account::Address;
+use crate::account::{calc_nonce_index, calc_value_index};
+use crate::address::Address;
 use crate::error::Error;
 use crate::hash::hash;
 use crate::u264::U264;
@@ -19,10 +20,20 @@ type H256 = [u8; 32];
 ///        0   1  n n+1   <= account roots
 /// ```
 pub trait Backend<'a> {
+    /// Instantiates a new `Backend`.
     fn new(db: &'a mut [u8], height: usize) -> Self;
+
+    /// Returns the height of the tree backing the db.
+    fn height(&self) -> usize;
 
     /// Calculates the root before making changes to the structure and after in one pass.
     fn root(&mut self) -> Result<H256, Error>;
+
+    /// Returns the value of a specified address.
+    fn value(&self, address: Address) -> Result<u64, Error>;
+
+    /// Returns the nonce of a specified address.
+    fn nonce(&self, address: Address) -> Result<u64, Error>;
 
     /// Increase the value of an account at `address`.
     fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error>;
@@ -97,6 +108,10 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
         }
     }
 
+    fn height(&self) -> usize {
+        self.height
+    }
+
     fn root(&mut self) -> Result<[u8; 32], Error> {
         let offsets = unsafe {
             core::slice::from_raw_parts(self.offsets.as_ptr() as *const u64, self.offsets.len() / 8)
@@ -136,9 +151,20 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
         helper(self.db, offsets, 0)
     }
 
+    fn value(&self, address: Address) -> Result<u64, Error> {
+        let index = calc_value_index(address, self.height);
+        let chunk = self.get(index);
+        Ok(u64::from_le_bytes(*array_ref![&chunk, 0, 8]))
+    }
+
+    fn nonce(&self, address: Address) -> Result<u64, Error> {
+        let index = calc_nonce_index(address, self.height);
+        let chunk = self.get(index);
+        Ok(u64::from_le_bytes(*array_ref![&chunk, 0, 8]))
+    }
+
     fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        // `value_index = (first_leaf + account) * 4 + 2`
-        let index = address_to_value_index(address, self.height);
+        let index = calc_value_index(address, self.height);
         let chunk = self.get(index);
 
         let value = u64::from_le_bytes(*array_ref![&chunk, 0, 8]);
@@ -156,8 +182,7 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
     }
 
     fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        // `value_index = (first_leaf + account) * 4 + 2`
-        let index = address_to_value_index(address, self.height);
+        let index = calc_value_index(address, self.height);
         let chunk = self.get(index);
 
         let value = u64::from_le_bytes(*array_ref![chunk, 0, 8]);
@@ -175,8 +200,7 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {
-        // `nonce_index = (first_leaf + account) * 4 + 1`
-        let index = ((((U264::one() << self.height) + address.into()) << 2) + 3.into()) << 1;
+        let index = calc_nonce_index(address, self.height);
         let chunk = self.get(index);
 
         let nonce = u64::from_le_bytes(*array_ref![chunk, 0, 8]);
@@ -192,11 +216,6 @@ impl<'a> Backend<'a> for InMemoryBackend<'a> {
 
         Ok(nonce)
     }
-}
-
-#[inline]
-pub fn address_to_value_index(address: Address, height: usize) -> U264 {
-    ((((U264::one() << height) + address.into()) << 2) + 2.into()) << 1
 }
 
 #[cfg(test)]

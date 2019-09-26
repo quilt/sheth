@@ -1,5 +1,5 @@
+use crate::address::Address;
 use crate::u264::U264;
-use bigint::{U256, U512};
 
 ///  Account merkle tree schema:
 ///
@@ -27,41 +27,22 @@ impl Account {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-pub struct Address(U256);
-
-impl From<usize> for Address {
-    fn from(n: usize) -> Address {
-        Address(n.into())
-    }
+/// Given an address and tree height, calculate the `value`'s general index.
+///
+/// ```text
+/// value_index = (first_leaf + account) * 4 + 2
+/// ```
+#[inline]
+pub fn calc_value_index(address: Address, height: usize) -> U264 {
+    ((((U264::one() << height) + address.into()) << 2) + 2.into()) << 1
 }
 
-impl From<U256> for Address {
-    fn from(n: U256) -> Address {
-        Address(n)
-    }
-}
-
-impl From<U512> for Address {
-    fn from(n: U512) -> Address {
-        Address(n.into())
-    }
-}
-
-impl From<[u8; 32]> for Address {
-    fn from(arr: [u8; 32]) -> Address {
-        Address(arr.into())
-    }
-}
-
-impl From<Address> for U264 {
-    fn from(address: Address) -> U264 {
-        U264::from(address.0)
-    }
-}
-
-impl From<Address> for [u8; 32] {
-    fn from(a: Address) -> [u8; 32] {
-        a.0.into()
-    }
+/// Given an address and tree height, calculate the `nonce`'s general index.
+///
+/// ```text
+/// nonce_index = (first_leaf + account) * 4 + 1
+/// ```
+#[inline]
+pub fn calc_nonce_index(address: Address, height: usize) -> U264 {
+    ((((U264::one() << height) + address.into()) << 2) + 3.into()) << 1
 }
