@@ -15,4 +15,7 @@ pub enum Error {
 
     /// The transaction was not able to be processed
     TransactionFailed(String),
+
+    /// The address did not match a known account
+    AddressUnknown(String),
 }
