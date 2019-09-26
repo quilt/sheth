@@ -1,4 +1,4 @@
-name: Rust
+name: Sheth tests 
 
 on: [push]
 

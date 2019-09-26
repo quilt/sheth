@@ -1,4 +1,4 @@
-name: Rust
+name: Client tests
 
 on: [push]
 
