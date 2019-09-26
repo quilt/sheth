@@ -1,9 +1,8 @@
 use super::error::Error;
 use crate::accounts::AddressedAccount;
-use arrayref::array_ref;
 use bigint::U256;
 use sheth::process::process_transactions;
-use sheth::state::{address_to_value_index, InMemoryBackend};
+use sheth::state::{Backend, InMemoryBackend};
 use sheth::transaction::{Transaction, Transfer};
 
 /// A enum that describes the possible commands a user might send to the client and their required
@@ -32,10 +31,9 @@ pub struct AccountsCmd();
 
 impl BalanceCmd {
     pub fn execute(&self, db: &InMemoryBackend) -> Result<(), Error> {
-        // todo get tree heigh from init
-        let index = address_to_value_index(self.address.into(), 256);
-        let chunk = db.get(index);
-        let value = u64::from_le_bytes(*array_ref![chunk, 0, 8]);
+        let value = db
+            .value(self.address.into())
+            .map_err(|_| Error::AddressUnknown("".to_string()))?;
 
         println!("Balance is: {}", value);
 
@@ -45,10 +43,9 @@ impl BalanceCmd {
 
 impl TransferCmd {
     pub fn execute(&self, db: &mut InMemoryBackend) -> Result<(), Error> {
-        // todo get tree heigh from init
-        let index = address_to_value_index(self.from.into(), 256) - 1.into();
-        let chunk = db.get(index);
-        let nonce = u64::from_le_bytes(*array_ref![chunk, 0, 8]);
+        let nonce = db
+            .nonce(self.from.into())
+            .map_err(|_| Error::AddressUnknown("".to_string()))?;
 
         let tx = Transaction::Transfer(Transfer {
             to: self.to.into(),
