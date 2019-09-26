@@ -7,15 +7,13 @@ pub mod account;
 pub mod address;
 pub mod error;
 pub mod hash;
-pub mod multiproof;
 pub mod process;
 pub mod state;
 pub mod transaction;
 pub mod u264;
 
-use crate::multiproof::Multiproof;
 use crate::process::process_transactions;
-use crate::state::State;
+use crate::state::{Multiproof, State};
 use crate::transaction::{Transaction, Transfer};
 
 #[cfg(feature = "scout")]

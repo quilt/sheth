@@ -1,3 +1,7 @@
+pub mod multiproof;
+
+pub use multiproof::Multiproof;
+
 use crate::address::Address;
 use crate::error::Error;
 use crate::hash::H256;

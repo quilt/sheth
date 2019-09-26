@@ -1,8 +1,7 @@
 pub mod blob;
 
-use sheth::multiproof::Multiproof;
 use sheth::process::process_transactions;
-use sheth::state::State;
+use sheth::state::{Multiproof, State};
 
 pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -> String {
     let initial_blob = blob::generate(accounts, transactions, height);

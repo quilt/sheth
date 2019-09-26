@@ -45,8 +45,7 @@ pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blo
 mod test {
     use super::*;
     use arrayref::array_ref;
-    use sheth::multiproof::Multiproof;
-    use sheth::state::State;
+    use sheth::state::{Multiproof, State};
 
     #[test]
     fn generate_small_tree() {

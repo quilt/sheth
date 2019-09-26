@@ -1,9 +1,8 @@
 use super::error::Error;
 use crate::accounts::AddressedAccount;
 use bigint::U256;
-use sheth::multiproof::Multiproof;
 use sheth::process::process_transactions;
-use sheth::state::State;
+use sheth::state::{Multiproof, State};
 use sheth::transaction::{Transaction, Transfer};
 
 /// A enum that describes the possible commands a user might send to the client and their required

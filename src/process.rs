@@ -34,7 +34,7 @@ fn transfer<'a, T: State<'a>>(db: &mut T, tx: &Transfer) -> Result<(), Error> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::multiproof::Multiproof;
+    use crate::state::Multiproof;
     use crate::transaction::{Transaction, Transfer};
     use bigint::U256;
 
