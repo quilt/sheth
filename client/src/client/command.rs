@@ -1,8 +1,6 @@
 use super::error::Error;
 use crate::accounts::AddressedAccount;
-use arrayref::array_ref;
 use bigint::U256;
-use sheth::account::{calc_nonce_index, calc_value_index};
 use sheth::process::process_transactions;
 use sheth::state::{Backend, InMemoryBackend};
 use sheth::transaction::{Transaction, Transfer};
