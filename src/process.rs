@@ -1,8 +1,8 @@
 use crate::error::Error;
-use crate::state::Backend;
+use crate::state::State;
 use crate::transaction::{Transaction, Transfer};
 
-pub fn process_transactions<'a, T: Backend<'a>>(
+pub fn process_transactions<'a, T: State<'a>>(
     db: &mut T,
     transactions: &[Transaction],
 ) -> Result<(), Error> {
@@ -23,7 +23,7 @@ pub fn process_transactions<'a, T: Backend<'a>>(
     Ok(())
 }
 
-fn transfer<'a, T: Backend<'a>>(db: &mut T, tx: &Transfer) -> Result<(), Error> {
+fn transfer<'a, T: State<'a>>(db: &mut T, tx: &Transfer) -> Result<(), Error> {
     db.sub_value(tx.from, tx.amount)?;
     db.add_value(tx.to, tx.amount)?;
 
@@ -34,7 +34,7 @@ fn transfer<'a, T: Backend<'a>>(db: &mut T, tx: &Transfer) -> Result<(), Error> 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::state::InMemoryBackend;
+    use crate::multiproof::Multiproof;
     use crate::transaction::{Transaction, Transfer};
     use bigint::U256;
 
@@ -83,7 +83,7 @@ mod test {
         ];
 
         let mut proof = PROOF;
-        let mut mem = InMemoryBackend::new(&mut proof, 1);
+        let mut mem = Multiproof::new(&mut proof, 1);
 
         let pre_root = mem.root().unwrap();
         assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));

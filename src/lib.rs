@@ -7,13 +7,15 @@ pub mod account;
 pub mod address;
 pub mod error;
 pub mod hash;
+pub mod multiproof;
 pub mod process;
 pub mod state;
 pub mod transaction;
 pub mod u264;
 
+use crate::multiproof::Multiproof;
 use crate::process::process_transactions;
-use crate::state::{Backend, InMemoryBackend};
+use crate::state::State;
 use crate::transaction::{Transaction, Transfer};
 
 #[cfg(feature = "scout")]
@@ -63,7 +65,7 @@ pub fn process_data_blob(blob: &mut [u8], pre_state_root: &[u8; 32]) -> [u8; 32]
     let transactions = deserialize_transactions(&blob, tx_count);
 
     // Load multi-merkle proof
-    let mut mem = InMemoryBackend::new(&mut blob[(4 + tx_count * 176)..], 256);
+    let mut mem = Multiproof::new(&mut blob[(4 + tx_count * 176)..], 256);
 
     // Verify pre_state_root
     let pre_root = mem.root().unwrap();

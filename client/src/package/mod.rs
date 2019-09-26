@@ -1,13 +1,14 @@
 pub mod blob;
 
+use sheth::multiproof::Multiproof;
 use sheth::process::process_transactions;
-use sheth::state::{Backend, InMemoryBackend};
+use sheth::state::State;
 
 pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -> String {
     let initial_blob = blob::generate(accounts, transactions, height);
     let mut blob = blob::generate(accounts, transactions, height);
 
-    let mut mem = InMemoryBackend::new(&mut blob.proof, height);
+    let mut mem = Multiproof::new(&mut blob.proof, height);
 
     let pre_state = mem.root().unwrap();
     assert_eq!(process_transactions(&mut mem, &blob.transactions), Ok(()));
