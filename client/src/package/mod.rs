@@ -8,7 +8,6 @@ pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -
     let mut blob = blob::generate(accounts, transactions, height);
 
     let mut mem = Multiproof::new(&mut blob.proof, height);
-
     let pre_state = mem.root().unwrap();
     assert_eq!(process_transactions(&mut mem, &blob.transactions), Ok(()));
     let post_state = mem.root().unwrap();

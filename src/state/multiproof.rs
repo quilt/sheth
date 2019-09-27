@@ -66,6 +66,19 @@ impl<'a> Multiproof<'a> {
 
         offset as usize
     }
+
+    #[cfg(feature = "std")]
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let mut ret: Vec<u8> = vec![];
+        ret.extend(
+            (((self.offsets.len() + 8) / 8) as u64)
+                .to_le_bytes()
+                .to_vec(),
+        );
+        ret.extend(self.offsets);
+        ret.extend(&*self.db);
+        ret
+    }
 }
 
 impl<'a> State for Multiproof<'a> {
