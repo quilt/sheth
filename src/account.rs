@@ -46,5 +46,5 @@ pub fn calc_value_index(address: Address, height: usize) -> U264 {
 /// ```
 #[inline]
 pub fn calc_nonce_index(address: Address, height: usize) -> U264 {
-    ((((U264::one() << height) + address.into()) << 2) + 3.into()) << 1
+    ((((U264::one() << height) + address.into()) << 2) + 1.into()) << 1
 }

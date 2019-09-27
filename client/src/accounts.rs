@@ -41,6 +41,9 @@ pub fn random_accounts(n: usize, height: usize) -> Vec<AddressedAccount> {
             },
         ));
 
+        let mut buf = [0u8; 32];
+        address.to_big_endian(&mut buf);
+
         acc
     })
 }

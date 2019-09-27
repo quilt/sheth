@@ -212,7 +212,7 @@ mod test {
             acc
         });
 
-        let proof: Vec<u8> = vec![h256(0), h256(0), zh(0), h256(1), h256(1), zh(0)]
+        let proof: Vec<u8> = vec![h256(0), h256(0), h256(1), h256(1), zh(0), zh(0)]
             .iter()
             .fold(vec![], |mut acc, x| {
                 acc.extend(x);
@@ -319,7 +319,7 @@ mod test {
         let mut mem = Multiproof::new(&mut proof, 1);
 
         assert_eq!(mem.inc_nonce(0.into()), Ok(2));
-        assert_eq!(mem.get((11 << 1).into()), h256(2));
+        assert_eq!(mem.get((9 << 1).into()), h256(2));
     }
 
     #[test]
