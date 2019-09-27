@@ -57,25 +57,19 @@ impl TransferCmd {
             signature: [0u8; 96],
         });
 
-        let mut body = serialize(&vec![]);
+        let mut body = serialize(&vec![tx.clone()]);
         body.extend(db.as_bytes());
-
-        process_transactions(db, &vec![tx])
-            .map_err(|_| Error::TransactionFailed("bad".to_string()))?;
-
-        let client = reqwest::Client::new();
-
         let mut request: HashMap<String, String> = HashMap::new();
-
         request.insert("block_body".to_string(), hex::encode(body));
 
-        let response = client
+        reqwest::Client::new()
             .post("http://127.0.0.1:5052/shard/0/block_body")
             .json(&request)
             .send()
-            .map_err(|_| Error::TransactionFailed("".to_string()))?;
+            .map_err(|_| Error::TransactionFailed("connection error".to_string()))?;
 
-        println!("response = {:?}", response);
+        process_transactions(db, &vec![tx])
+            .map_err(|_| Error::TransactionFailed("local error".to_string()))?;
 
         Ok(())
     }
