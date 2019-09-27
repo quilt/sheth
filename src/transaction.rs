@@ -2,6 +2,7 @@ use crate::address::Address;
 use crate::error::Error;
 use crate::state::State;
 
+#[cfg_attr(feature = "std", derive(Clone, Debug))]
 pub enum Transaction {
     Transfer(Transfer),
     Withdrawal(Transfer),
@@ -48,6 +49,7 @@ impl Transaction {
     }
 }
 
+#[cfg_attr(feature = "std", derive(Clone))]
 pub struct Transfer {
     pub to: Address,
     pub from: Address,
@@ -71,10 +73,10 @@ impl std::fmt::Debug for Transfer {
     }
 }
 
-#[cfg_attr(feature = "std", derive(Debug))]
+#[cfg_attr(feature = "std", derive(Clone, Debug))]
 pub struct Withdrawal;
 
-#[cfg_attr(feature = "std", derive(Debug))]
+#[cfg_attr(feature = "std", derive(Clone, Debug))]
 pub struct Deposit;
 
 #[cfg(test)]
