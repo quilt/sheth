@@ -14,6 +14,9 @@ jobs:
       with:
         toolchain: stable
         target: wasm32-unknown-unknown
+    - name: Install Chisel
+      run:
+        cargo install chisel
     - name: Build
       run: 
         make build-wasm
