@@ -2,8 +2,11 @@ use crate::accounts::{random_accounts, AddressedAccount};
 use crate::proof::offsets::calculate as calculate_offsets;
 use crate::proof::uncompressed::generate as generate_uncompressed_proof;
 use crate::transactions;
+use sheth::process::process_transactions;
+use sheth::state::{Multiproof, State};
 use sheth::transaction::Transaction;
 
+#[derive(Clone)]
 pub struct Blob {
     pub proof: Vec<u8>,
     pub transactions: Vec<Transaction>,
@@ -39,6 +42,23 @@ pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blo
         transactions,
         accounts,
     }
+}
+
+pub fn generate_with_roots(
+    accounts: usize,
+    transactions: usize,
+    tree_height: usize,
+) -> (Blob, [u8; 32], [u8; 32]) {
+    let mut blob = generate(accounts, transactions, tree_height);
+    let ret_blob = blob.clone();
+
+    let mut mem = Multiproof::new(&mut blob.proof, tree_height);
+
+    let pre_state = mem.root().unwrap();
+    assert_eq!(process_transactions(&mut mem, &blob.transactions), Ok(()));
+    let post_state = mem.root().unwrap();
+
+    (ret_blob, pre_state, post_state)
 }
 
 #[cfg(test)]

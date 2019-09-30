@@ -1,16 +1,7 @@
 use composer::blob;
-use sheth::process::process_transactions;
-use sheth::state::{Multiproof, State};
 
 pub fn build(accounts: usize, transactions: usize, height: usize, scout: bool) -> String {
-    let initial_blob = blob::generate(accounts, transactions, height);
-    let mut blob = blob::generate(accounts, transactions, height);
-
-    let mut mem = Multiproof::new(&mut blob.proof, height);
-
-    let pre_state = mem.root().unwrap();
-    assert_eq!(process_transactions(&mut mem, &blob.transactions), Ok(()));
-    let post_state = mem.root().unwrap();
+    let (blob, pre_state, post_state) = blob::generate_with_roots(accounts, transactions, height);
 
     if scout {
         format!(
@@ -28,7 +19,7 @@ shard_post_state:
     exec_env_states:
         - \"{}\"",
             hex::encode(pre_state),
-            hex::encode(initial_blob.to_bytes()),
+            hex::encode(blob.to_bytes()),
             hex::encode(post_state)
         )
     } else {
@@ -36,7 +27,7 @@ shard_post_state:
             "{} {} {}",
             hex::encode(pre_state),
             hex::encode(post_state),
-            hex::encode(initial_blob.to_bytes()),
+            hex::encode(blob.to_bytes()),
         )
     }
 }
