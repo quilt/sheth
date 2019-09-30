@@ -1,11 +1,8 @@
 #[macro_use]
 extern crate clap;
 
-mod accounts;
 mod client;
 mod package;
-mod proof;
-mod transactions;
 
 use clap::{App, Arg, SubCommand};
 

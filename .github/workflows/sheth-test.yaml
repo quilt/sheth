@@ -1,4 +1,4 @@
-name: Sheth tests 
+name: sheth-tests
 
 on: [push]
 
