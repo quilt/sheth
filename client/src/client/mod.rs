@@ -2,8 +2,8 @@ mod command;
 mod error;
 mod parse;
 
-use crate::package::blob;
 use command::Command;
+use composer::blob;
 use dialoguer::{theme::CustomPromptCharacterTheme, Input};
 use parse::parse_command;
 use sheth::state::Multiproof;

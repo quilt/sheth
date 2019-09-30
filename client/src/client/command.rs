@@ -1,7 +1,7 @@
 use super::error::Error;
-use crate::accounts::AddressedAccount;
-use crate::transactions::serialize;
 use bigint::U256;
+use composer::accounts::AddressedAccount;
+use composer::transactions::serialize;
 use sheth::process::process_transactions;
 use sheth::state::{Multiproof, State};
 use sheth::transaction::{Transaction, Transfer};

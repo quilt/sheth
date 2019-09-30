@@ -1,5 +1,4 @@
-pub mod blob;
-
+use composer::blob;
 use sheth::process::process_transactions;
 use sheth::state::{Multiproof, State};
 
