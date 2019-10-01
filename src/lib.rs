@@ -14,12 +14,12 @@ pub mod transaction;
 pub mod u264;
 
 use crate::process::process_transactions;
-use crate::state::{Multiproof, State};
 use crate::transaction::{Transaction, Transfer};
 
 #[cfg(feature = "scout")]
 use alloc::vec::Vec;
 use arrayref::array_ref;
+use imp::Imp;
 
 #[cfg(not(feature = "std"))]
 #[global_allocator]
@@ -64,16 +64,16 @@ pub fn process_data_blob(blob: &mut [u8], pre_state_root: &[u8; 32]) -> [u8; 32]
     let transactions = deserialize_transactions(&blob, tx_count);
 
     // Load multi-merkle proof
-    let mut mem = Multiproof::new(&mut blob[(4 + tx_count * 176)..], 256);
+    let mut mem = Imp::new(&mut blob[(4 + tx_count * 176)..], 256);
 
     // Verify pre_state_root
-    let pre_root = mem.root().unwrap();
+    let pre_root = mem.root();
     assert_eq!(pre_state_root, &pre_root);
 
     // Proccess all transactions (only transfers for now)
     assert_eq!(process_transactions(&mut mem, &transactions), Ok(()));
 
-    mem.root().unwrap()
+    mem.root()
 }
 
 pub fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction> {
