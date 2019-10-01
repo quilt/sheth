@@ -1,5 +1,9 @@
 # sheth
 
+![client tests build status](https://github.com/lightclient/sheth/workflows/sheth-bench/badge.svg)
+![sheth-tests build status](https://github.com/lightclient/sheth/workflows/sheth-tests/badge.svg)
+[![Apache License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/lightclient/sheth#license)
+
 `sheth` [ ˈshēth ] is an [execution
 environment](https://hackmd.io/UzysWse1Th240HELswKqVA?view#Execution-Environment-EE)
 (EE) for Ethereum 2.0 that facilitates the movement of ether within a shard and
