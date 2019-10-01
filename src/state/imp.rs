@@ -1,24 +1,10 @@
 use crate::account::{calc_nonce_index, calc_value_index};
 use crate::address::Address;
 use crate::error::Error;
-use crate::hash::{hash, H256};
 use crate::state::State;
 use crate::u264::U264;
-use arrayref::{array_mut_ref, array_ref};
+use arrayref::array_ref;
 use imp::Imp;
-
-// #[cfg(feature = "std")]
-// pub fn as_bytes(&self) -> Vec<u8> {
-//     let mut ret: Vec<u8> = vec![];
-//     ret.extend(
-//         (((self.offsets.len() + 8) / 8) as u64)
-//             .to_le_bytes()
-//             .to_vec(),
-//     );
-//     ret.extend(self.offsets);
-//     ret.extend(&*self.db);
-//     ret
-// }
 
 impl<'a> State for Imp<'a, U264> {
     fn root(&mut self) -> Result<[u8; 32], Error> {
@@ -95,6 +81,7 @@ impl<'a> State for Imp<'a, U264> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::hash::H256;
 
     fn zh(depth: usize) -> H256 {
         let mut buf = [0u8; 64];
