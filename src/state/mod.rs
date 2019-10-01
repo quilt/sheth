@@ -1,8 +1,8 @@
-pub mod multiproof;
-pub use multiproof::Multiproof;
+pub mod imp;
 
 #[cfg(test)]
 pub mod mock;
+
 #[cfg(test)]
 pub use mock::MockState;
 

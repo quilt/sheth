@@ -2,9 +2,10 @@ use crate::accounts::{random_accounts, AddressedAccount};
 use crate::proof::offsets::calculate as calculate_offsets;
 use crate::proof::uncompressed::generate as generate_uncompressed_proof;
 use crate::transactions;
+use imp::Imp;
 use sheth::process::process_transactions;
-use sheth::state::{Multiproof, State};
 use sheth::transaction::Transaction;
+use sheth::u264::U264;
 
 #[derive(Clone)]
 pub struct Blob {
@@ -52,11 +53,11 @@ pub fn generate_with_roots(
     let mut blob = generate(accounts, transactions, tree_height);
     let ret_blob = blob.clone();
 
-    let mut mem = Multiproof::new(&mut blob.proof, tree_height);
+    let mut mem = Imp::<U264>::new(&mut blob.proof, tree_height);
 
-    let pre_state = mem.root().unwrap();
+    let pre_state = mem.root();
     assert_eq!(process_transactions(&mut mem, &blob.transactions), Ok(()));
-    let post_state = mem.root().unwrap();
+    let post_state = mem.root();
 
     (ret_blob, pre_state, post_state)
 }
@@ -65,7 +66,6 @@ pub fn generate_with_roots(
 mod test {
     use super::*;
     use arrayref::array_ref;
-    use sheth::state::{Multiproof, State};
 
     #[test]
     fn generate_small_tree() {
@@ -90,7 +90,7 @@ mod test {
         ];
 
         assert_eq!(generate(1, 0, 1).to_bytes(), proof);
-        let mut mem = Multiproof::new(&mut proof[4..], 1);
-        assert_eq!(mem.root(), Ok(*array_ref![root, 0, 32]));
+        let mut mem = Imp::<U264>::new(&mut proof[4..], 1);
+        assert_eq!(mem.root(), *array_ref![root, 0, 32]);
     }
 }
