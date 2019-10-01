@@ -22,42 +22,7 @@ use imp::Imp;
 
 impl<'a> State for Imp<'a, U264> {
     fn root(&mut self) -> Result<[u8; 32], Error> {
-        let offsets = unsafe {
-            core::slice::from_raw_parts(self.offsets.as_ptr() as *const u64, self.offsets.len() / 8)
-        };
-
-        fn helper(proof: &[u8], offsets: &[u64], offset: u64) -> Result<H256, Error> {
-            if offsets.len() == 0 {
-                return Ok(*array_ref![proof, (offset * 32) as usize, 32]);
-            }
-
-            let mut left = *array_ref![proof, (offset * 32) as usize, 32];
-            let mut right = *array_ref![proof, ((offset + 1) * 32) as usize, 32];
-
-            if offsets[0] != 1 {
-                left = helper(proof, &offsets[1..offsets[0] as usize], offset)?;
-            }
-
-            if offsets.len() != 1 {
-                right = helper(
-                    proof,
-                    &offsets[offsets[0] as usize..],
-                    offsets[0] as u64 + offset,
-                )?;
-            }
-
-            // Copy chunks into hashing buffer
-            let mut buf = [0u8; 64];
-            buf[0..32].copy_from_slice(&left);
-            buf[32..64].copy_from_slice(&right);
-
-            // Hash chunks
-            hash(array_mut_ref![buf, 0, 64]);
-
-            Ok(*array_ref![buf, 0, 32])
-        }
-
-        helper(self.db, offsets, 0)
+        Ok(self.root())
     }
 
     fn value(&self, address: Address) -> Result<u64, Error> {
