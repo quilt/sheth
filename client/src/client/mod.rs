@@ -5,8 +5,9 @@ mod parse;
 use command::Command;
 use composer::blob;
 use dialoguer::{theme::CustomPromptCharacterTheme, Input};
+use imp::Imp;
 use parse::parse_command;
-use sheth::state::Multiproof;
+use sheth::u264::U264;
 use std::io;
 use std::io::prelude::*;
 
@@ -19,7 +20,7 @@ pub fn start(accounts: usize, tree_height: usize) {
     let blob = blob::generate(accounts, 0, tree_height);
     let accounts = blob.accounts;
     let mut proof = blob.proof;
-    let mut db = Multiproof::new(&mut proof, tree_height);
+    let mut db = Imp::<U264>::new(&mut proof, tree_height);
 
     println!("Ok.\n");
 
