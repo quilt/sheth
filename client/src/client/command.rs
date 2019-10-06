@@ -2,9 +2,11 @@ use super::error::Error;
 use bigint::U256;
 use composer::accounts::AddressedAccount;
 use composer::transactions::serialize;
+use imp::Imp;
 use sheth::process::process_transactions;
-use sheth::state::{Multiproof, State};
+use sheth::state::State;
 use sheth::transaction::{Transaction, Transfer};
+use sheth::u264::U264;
 use std::collections::HashMap;
 
 /// A enum that describes the possible commands a user might send to the client and their required
@@ -32,7 +34,7 @@ pub struct TransferCmd {
 pub struct AccountsCmd();
 
 impl BalanceCmd {
-    pub fn execute(&self, db: &Multiproof) -> Result<(), Error> {
+    pub fn execute(&self, db: &Imp<U264>) -> Result<(), Error> {
         let value = db
             .value(self.address.into())
             .map_err(|_| Error::AddressUnknown("".to_string()))?;
@@ -44,7 +46,7 @@ impl BalanceCmd {
 }
 
 impl TransferCmd {
-    pub fn execute(&self, db: &mut Multiproof) -> Result<(), Error> {
+    pub fn execute(&self, db: &mut Imp<U264>) -> Result<(), Error> {
         let nonce = db
             .nonce(self.from.into())
             .map_err(|_| Error::AddressUnknown("".to_string()))?;
@@ -58,7 +60,7 @@ impl TransferCmd {
         });
 
         let mut body = serialize(&vec![tx.clone()]);
-        body.extend(db.as_bytes());
+        body.extend(imp_to_bytes(db));
         let mut request: HashMap<String, String> = HashMap::new();
         request.insert("block_body".to_string(), hex::encode(body));
 
@@ -85,4 +87,16 @@ impl AccountsCmd {
 
         Ok(())
     }
+}
+
+fn imp_to_bytes(proof: &Imp<U264>) -> Vec<u8> {
+    let mut ret: Vec<u8> = vec![];
+    ret.extend(
+        (((proof.offsets.len() + 8) / 8) as u64)
+            .to_le_bytes()
+            .to_vec(),
+    );
+    ret.extend(proof.offsets);
+    ret.extend(&*proof.db);
+    ret
 }

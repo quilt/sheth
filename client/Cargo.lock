@@ -183,6 +183,7 @@ dependencies = [
  "composer 0.1.0",
  "dialoguer 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "imp 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.9.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "sheth 0.1.0",
 ]
