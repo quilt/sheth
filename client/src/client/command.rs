@@ -11,6 +11,8 @@ use std::collections::HashMap;
 
 /// A enum that describes the possible commands a user might send to the client and their required
 /// arguments.
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Command {
     Balance(BalanceCmd),
     Transfer(TransferCmd),
@@ -19,11 +21,15 @@ pub enum Command {
 }
 
 /// The balance command will return the balance of a specified address.
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct BalanceCmd {
     pub(crate) address: U256,
 }
 
 /// The transfer command will transfer some amount from one specified account to another.
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct TransferCmd {
     pub(crate) from: U256,
     pub(crate) to: U256,
@@ -31,6 +37,8 @@ pub struct TransferCmd {
 }
 
 /// The accounts command will list the accounts managed by the client.
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct AccountsCmd();
 
 impl BalanceCmd {
