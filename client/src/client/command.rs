@@ -104,3 +104,73 @@ fn imp_to_bytes(proof: &Imp<U264>) -> Vec<u8> {
     ret.extend(&*proof.db);
     ret
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    use composer::blob;
+
+    const ADDRESS: [u8; 32] = [
+        185, 79, 94, 160, 186, 57, 73, 76, 232, 57, 97, 63, 255, 186, 116, 39, 149, 121, 38, 138,
+        116, 39, 149, 121, 38, 131, 66, 69, 103, 137, 101, 35,
+    ];
+
+    macro_rules! create_db {
+        ($blob_name: ident, $db_name: ident, $accounts_expr: expr, $tree_height: expr) => {
+            #[allow(unused_mut)]
+            let mut $blob_name = blob::generate($accounts_expr, 0, $tree_height);
+            #[allow(unused_mut)]
+            let mut $db_name = Imp::<U264>::new(&mut $blob_name.proof, $tree_height);
+        };
+    }
+
+    fn create_test_transfer(accounts: &Vec<AddressedAccount>) -> TransferCmd {
+        TransferCmd {
+            from: accounts[0].0,
+            to: accounts[1].0,
+            amount: 45,
+        }
+    }
+
+    #[test]
+    fn balance_known_address_ok() {
+        create_db!(blob, db, 1, 256);
+        assert_eq!(
+            Ok(()),
+            BalanceCmd {
+                address: blob.accounts[0].0
+            }
+            .execute(&db)
+        );
+    }
+
+    #[test]
+    #[ignore] // TODO: error handling in Imp(State)::value() and re-enable
+    fn balance_unknown_address_ko() {
+        create_db!(blob, db, 1, 256);
+        assert_eq!(
+            Err(Error::AddressUnknown("".to_string())),
+            BalanceCmd {
+                address: U256::from(ADDRESS)
+            }
+            .execute(&db)
+        );
+    }
+
+    #[test]
+    fn accounts_ok() {
+        create_db!(blob, _db, 2, 256);
+        assert_eq!(Ok(()), AccountsCmd {}.execute(&blob.accounts));
+    }
+
+    #[test]
+    fn transfer_ko() {
+        create_db!(blob, db, 2, 256);
+        let accounts = blob.accounts;
+        assert_eq!(
+            Err(Error::TransactionFailed("connection error".to_string())),
+            create_test_transfer(&accounts).execute(&mut db)
+        );
+    }
+}
