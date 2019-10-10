@@ -9,7 +9,7 @@ environment](https://hackmd.io/UzysWse1Th240HELswKqVA?view#Execution-Environment
 (EE) for Ethereum 2.0 that facilitates the movement of ether within a shard and
 provides mechanisms to move ether between a shard and the beacon chain.
 
-## Getting Started
+## Quick Start
 
 First, setup your environment:
 ```console
@@ -20,7 +20,7 @@ make setup
 
 Then simulate execution using [Scout](https://github.com/ewasm/scout):
 ```console
-make test
+make scout
 ```
 
 #### Recommended Reading
@@ -39,8 +39,9 @@ other questions / concerns.
   decisions of the protocol and EE runtime.
 * Efficiently authenticating and updating merkle multi-proofs is critical to the
   success of stateless execution environments.
-* In order to develop efficient tooling for EE development, it's important to
+* In order to develop strong tooling for EE development, it's important to
   determine a lower bound for execution time and binary size to target. 
+* Provide a framework on which others can develop and experiment.
 
 
 
@@ -126,7 +127,7 @@ be needed since `1` and `3` can be calculated from that set.
 - [ ] Consume beacon chain withdrawal receipts
 - [ ] Allow shard ether to be deposited to the beacon chain
 - [ ] Validate transaction signature against BLS pubkey
-- [ ] Verify transaction nonce against account
+- [x] Verify transaction nonce against account
 - [ ] Implement `merge` functionality for multiple packages
 - [ ] Minimize binary size
 - [ ] Minimize execution time
