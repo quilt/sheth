@@ -127,7 +127,7 @@ be needed since `1` and `3` can be calculated from that set.
 - [ ] Consume beacon chain withdrawal receipts
 - [ ] Allow shard ether to be deposited to the beacon chain
 - [ ] Validate transaction signature against BLS pubkey
-- [ ] Verify transaction nonce against account
+- [x] Verify transaction nonce against account
 - [ ] Implement `merge` functionality for multiple packages
 - [ ] Minimize binary size
 - [ ] Minimize execution time
