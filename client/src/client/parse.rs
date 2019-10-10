@@ -81,7 +81,7 @@ mod test {
     ];
 
     fn create_correct_balance_arguments<'a>() -> Vec<&'a str> {
-        let mut arguments = vec!();
+        let mut arguments = vec![];
         arguments.push(ADDRESS);
         arguments
     }
@@ -101,7 +101,7 @@ mod test {
     }
 
     fn create_correct_transfer_arguments<'a>() -> Vec<&'a str> {
-        let mut arguments = vec!();
+        let mut arguments = vec![];
         arguments.push(ADDRESS);
         arguments.push(ADDRESS);
         arguments.push("34");
@@ -169,29 +169,20 @@ mod test {
             correct_transfer
         );
 
-        let correct_accounts = Command::Accounts(AccountsCmd{});
+        let correct_accounts = Command::Accounts(AccountsCmd {});
 
         assert_eq!(
             parse_command("accounts".to_string()).unwrap(),
             correct_accounts
         );
 
-        assert_eq!(
-            parse_command("a".to_string()).unwrap(),
-            correct_accounts
-        );
+        assert_eq!(parse_command("a".to_string()).unwrap(), correct_accounts);
 
         let correct_exit = Command::Exit;
 
-        assert_eq!(
-            parse_command("exit".to_string()).unwrap(),
-            correct_exit
-        );
+        assert_eq!(parse_command("exit".to_string()).unwrap(), correct_exit);
 
-        assert_eq!(
-            parse_command("e".to_string()).unwrap(),
-            correct_exit
-        );
+        assert_eq!(parse_command("e".to_string()).unwrap(), correct_exit);
     }
 
     #[test]
@@ -212,7 +203,7 @@ mod test {
 
     #[test]
     fn parse_balance_wrong_arguments_ko() {
-        let short_arguments = vec!();
+        let short_arguments = vec![];
         assert_arguments_incorrect!(short_arguments, parse_balance, "");
 
         let mut long_arguments = create_correct_balance_arguments();
@@ -234,7 +225,7 @@ mod test {
 
     #[test]
     fn parse_transfer_wrong_arguments_ko() {
-        let arguments = vec!();
+        let arguments = vec![];
         assert_arguments_incorrect!(arguments, parse_transfer, "");
 
         let mut short_arguments = create_correct_transfer_arguments();
@@ -274,7 +265,7 @@ mod test {
 
     #[test]
     fn parse_accounts_with_arguments_ko() {
-        let mut arguments = vec!();
+        let mut arguments = vec![];
         arguments.push("mine");
         let check_arguments = arguments.clone();
         assert_arguments_incorrect!(arguments, parse_accounts, check_arguments.join(" "));
