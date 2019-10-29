@@ -1,4 +1,4 @@
-name: sheth-tests
+name: client-tests
 
 on: [push]
 
