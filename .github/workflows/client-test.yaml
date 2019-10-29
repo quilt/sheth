@@ -1,0 +1,17 @@
+name: client-tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: 
+        cargo build --manifest-path=client/Cargo.toml --release --verbose
+    - name: Run tests
+      run: 
+        cargo test --manifest-path=client/Cargo.toml --release --verbose

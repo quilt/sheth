@@ -1,4 +1,4 @@
-name: sheth-tests
+name: sheth-test
 
 on: [push]
 
@@ -15,4 +15,3 @@ jobs:
     - name: Run tests
       run: 
         cargo test --release --verbose
-        cargo test --manifest-path=client/Cargo.toml --release
