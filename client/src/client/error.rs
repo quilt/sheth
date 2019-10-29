@@ -1,5 +1,5 @@
 /// An enum of errors that can occur while running a client.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// Unable to parse command string into a new command
     CommandUnknown(String),
