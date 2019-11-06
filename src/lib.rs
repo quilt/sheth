@@ -21,10 +21,16 @@ use alloc::vec::Vec;
 use arrayref::array_ref;
 use imp::Imp;
 
+// A global memory allocator is provided as part of the Rust standard library. When a crate is
+// compiled using `no_std` and dynamically allocates memory, it must specify an allocator it wishes
+// to use. `QIMalloc` is a "quick incremental memory allocator" that doesn't bother with
+// deallocating memory, since these runtimes are short-lived.
 #[cfg(not(feature = "std"))]
 #[global_allocator]
 static ALLOC: qimalloc::QIMalloc = qimalloc::QIMalloc::INIT;
 
+// This is a list of functions that `ewasm` environments support. They provide additional data and
+// functionality to execution environments. Each function is implemented in the host environment.
 #[cfg(feature = "scout")]
 mod native {
     extern "C" {

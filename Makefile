@@ -1,5 +1,5 @@
 setup:
-	git clone git@github.com:ewasm/scout.git
+	git clone --single-branch --branch sheth git@github.com:lightclient/scout.git
 
 build:
 	cargo build --manifest-path=client/Cargo.toml --release

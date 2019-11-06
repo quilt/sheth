@@ -7,6 +7,7 @@ use sheth::process::process_transactions;
 use sheth::transaction::Transaction;
 use sheth::u264::U264;
 
+/// A `Blob` includes all the neccessary data to construct the input data blob to `sheth`.
 #[derive(Clone)]
 pub struct Blob {
     pub proof: Vec<u8>,
@@ -15,6 +16,7 @@ pub struct Blob {
 }
 
 impl Blob {
+    /// Returns a serialized blob that can be used as input to `sheth`.
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut ret = transactions::serialize(&self.transactions);
         ret.extend(&self.proof);
@@ -22,6 +24,7 @@ impl Blob {
     }
 }
 
+/// Build a blob with specified tree height, accounts, and transactions.
 pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blob {
     let accounts = random_accounts(accounts, tree_height);
     let proof = generate_uncompressed_proof(accounts.clone(), tree_height);
@@ -45,6 +48,7 @@ pub fn generate(accounts: usize, transactions: usize, tree_height: usize) -> Blo
     }
 }
 
+/// Returns a `Blob` and the pre-state root + post-state root for the blob.
 pub fn generate_with_roots(
     accounts: usize,
     transactions: usize,
