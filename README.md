@@ -23,6 +23,11 @@ Then simulate execution using [Scout](https://github.com/ewasm/scout):
 make scout
 ```
 
+Or run on your local architecture (useful for tracking down bugs):
+```console
+make test
+```
+
 #### Recommended Reading
 The design space for EEs is broad and builds on many different Ethereum 2.0
 related concepts. If you're lost, here are a few places to get started:
