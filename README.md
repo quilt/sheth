@@ -1,7 +1,8 @@
 # sheth
 
-![client tests build status](https://github.com/lightclient/sheth/workflows/sheth-bench/badge.svg)
-![sheth-tests build status](https://github.com/lightclient/sheth/workflows/sheth-tests/badge.svg)
+![sheth test status](https://github.com/lightclient/sheth/workflows/sheth-test/badge.svg)
+![client test status](https://github.com/lightclient/sheth/workflows/client-test/badge.svg)
+![composer test status](https://github.com/lightclient/sheth/workflows/composer-test/badge.svg)
 [![Apache License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/lightclient/sheth#license)
 
 `sheth` [ ˈshēth ] is an [execution
