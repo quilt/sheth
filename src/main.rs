@@ -2,6 +2,10 @@ use arrayref::array_ref;
 use sheth::process_data_blob;
 use std::fs;
 
+/// The `main` function is the entry point when `sheth` is compiled as an executable binary.
+/// Testing `sheth` in this manner is usually better than running through `Scout`, because your
+/// local system will print coherent stack traces where as the WebAssembly interpreter will just
+/// notify that a `Trap` has been detected.
 pub fn main() {
     let input = fs::read_to_string("blob").expect("File to exist");
 

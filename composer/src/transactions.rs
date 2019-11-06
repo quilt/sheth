@@ -2,12 +2,13 @@ use crate::accounts::AddressedAccount;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use sheth::transaction::{Transaction, Transfer};
 
-pub fn generate(tx_count: usize, mut accounts: Vec<AddressedAccount>) -> Vec<Transaction> {
+/// Generate `n` number of transactions between `accounts`.
+pub fn generate(n: usize, mut accounts: Vec<AddressedAccount>) -> Vec<Transaction> {
     let mut rng = StdRng::seed_from_u64(42);
 
     let mut transactions: Vec<Transaction> = vec![];
 
-    for _ in 0..tx_count {
+    for _ in 0..n {
         let to = rng.gen_range(0, accounts.len());
         let from = rng.gen_range(0, accounts.len());
 
@@ -34,6 +35,7 @@ pub fn generate(tx_count: usize, mut accounts: Vec<AddressedAccount>) -> Vec<Tra
     transactions
 }
 
+/// Convert an array of `Transaction` to an unaligned array of `u8`.
 pub fn serialize(transactions: &[Transaction]) -> Vec<u8> {
     let mut bytes = transactions.len().to_le_bytes()[0..4].to_vec();
 

@@ -49,7 +49,6 @@ other questions / concerns.
 * Provide a framework on which others can develop and experiment.
 
 
-
 ## Architecture
 At a high level, `sheth` provides a single state transition function:
 

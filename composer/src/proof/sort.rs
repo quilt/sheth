@@ -1,10 +1,10 @@
 use bigint::U512;
 use std::ops::Shl;
 
+/// Sort a vector bit-alphabetically
+///
+/// For more info, see: https://github.com/ethereum/eth2.0-specs/issues/1303
 pub fn alpha_sort(n: &Vec<U512>) -> Vec<U512> {
-    // Sort bit-alphabetically
-    // https://github.com/ethereum/eth2.0-specs/issues/1303
-
     let mut ret = n.clone();
 
     ret.sort_by(|a, b| {

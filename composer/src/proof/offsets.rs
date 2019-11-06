@@ -1,5 +1,9 @@
 use bigint::U512;
 
+/// Returns a vector of offsets that is read by an in-place lookup algorithm to determine the
+/// location of a particular 32 byte value in the multiproof.
+///
+/// For more info, see: https://github.com/protolambda/eth-merkle-trees
 pub fn calculate(indexes: Vec<U512>) -> Vec<u64> {
     let mut raw_indexes = vec![];
 

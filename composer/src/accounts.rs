@@ -5,6 +5,10 @@ use sheth::account::Account;
 use sheth::bls::PublicKey;
 use std::collections::HashMap;
 
+/// A tuple consisting of an `Account` and its address.
+///
+/// The address is important for other stages in the `Blob` generation process since it defines
+/// where in the multi-proof the account resides.
 #[derive(Clone)]
 pub struct AddressedAccount(pub U256, pub Account);
 
