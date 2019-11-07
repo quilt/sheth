@@ -1,5 +1,6 @@
 use crate::accounts::AddressedAccount;
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use sheth::state::TokenColor;
 use sheth::transaction::{Transaction, Transfer};
 
 /// Generate `n` number of transactions between `accounts`.
@@ -12,19 +13,40 @@ pub fn generate(n: usize, mut accounts: Vec<AddressedAccount>) -> Vec<Transactio
         let to = rng.gen_range(0, accounts.len());
         let from = rng.gen_range(0, accounts.len());
 
+        let (color, amount) = match rng.gen_range(0, 2) {
+            0 => (TokenColor::Red, accounts[from].1.red_value),
+            1 => (TokenColor::Green, accounts[from].1.green_value),
+            2 => (TokenColor::Blue, accounts[from].1.blue_value),
+            _ => panic!("Unknown token color"),
+        };
+
         let tx = Transaction::Transfer(Transfer {
             to: accounts[to].0.into(),
             from: accounts[from].0.into(),
             nonce: accounts[from].1.nonce,
-            amount: rng.gen_range(0, accounts[from].1.value),
+            amount: rng.gen_range(0, amount),
+            color,
             signature: [0u8; 96],
         });
 
         match &tx {
             Transaction::Transfer(t) => {
                 accounts[from].1.nonce += 1;
-                accounts[from].1.value -= t.amount;
-                accounts[to].1.value += t.amount;
+
+                match t.color {
+                    TokenColor::Red => {
+                        accounts[from].1.red_value -= t.amount;
+                        accounts[to].1.red_value += t.amount;
+                    }
+                    TokenColor::Green => {
+                        accounts[from].1.green_value -= t.amount;
+                        accounts[to].1.green_value += t.amount;
+                    }
+                    TokenColor::Blue => {
+                        accounts[from].1.blue_value -= t.amount;
+                        accounts[to].1.blue_value += t.amount;
+                    }
+                }
             }
             _ => unreachable!(),
         }
@@ -46,6 +68,7 @@ pub fn serialize(transactions: &[Transaction]) -> Vec<u8> {
                 bytes.extend_from_slice(&<[u8; 32]>::from(tx.from));
                 bytes.extend_from_slice(&tx.nonce.to_le_bytes());
                 bytes.extend_from_slice(&tx.amount.to_le_bytes());
+                bytes.extend_from_slice(&(tx.color as u8).to_le_bytes());
                 bytes.extend_from_slice(&tx.signature);
             }
             _ => unimplemented!(),

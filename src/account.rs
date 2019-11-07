@@ -1,5 +1,6 @@
 use crate::address::Address;
 use crate::bls::PublicKey;
+use crate::state::TokenColor;
 use crate::u264::U264;
 
 ///  Account merkle tree schema:
@@ -16,7 +17,9 @@ use crate::u264::U264;
 pub struct Account {
     pub pubkey: PublicKey,
     pub nonce: u64,
-    pub value: u64,
+    pub red_value: u64,
+    pub green_value: u64,
+    pub blue_value: u64,
 }
 
 impl Account {
@@ -24,7 +27,9 @@ impl Account {
         Account {
             pubkey: PublicKey::zero(),
             nonce: 0,
-            value: 0,
+            red_value: 0,
+            green_value: 0,
+            blue_value: 0,
         }
     }
 }
@@ -35,8 +40,8 @@ impl Account {
 /// value_index = (first_leaf + account) * 4 + 2
 /// ```
 #[inline]
-pub fn calc_value_index(address: Address, height: usize) -> U264 {
-    ((((U264::one() << height) + address.into()) << 2) + 2.into()) << 1
+pub fn calc_value_index(color: TokenColor, address: Address, height: usize) -> U264 {
+    ((((((U264::one() << height) + address.into()) << 2) + 2.into()) << 2) + (color as u8).into())
 }
 
 /// Given an address and tree height, calculate the `nonce`'s general index.
@@ -46,5 +51,5 @@ pub fn calc_value_index(address: Address, height: usize) -> U264 {
 /// ```
 #[inline]
 pub fn calc_nonce_index(address: Address, height: usize) -> U264 {
-    ((((U264::one() << height) + address.into()) << 2) + 1.into()) << 1
+    ((((U264::one() << height) + address.into()) << 2) + 1.into()) << 2
 }

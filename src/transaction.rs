@@ -1,6 +1,6 @@
 use crate::address::Address;
 use crate::error::Error;
-use crate::state::State;
+use crate::state::{State, TokenColor};
 
 #[cfg_attr(feature = "std", derive(Clone, Debug))]
 pub enum Transaction {
@@ -55,6 +55,7 @@ pub struct Transfer {
     pub from: Address,
     pub nonce: u64,
     pub amount: u64,
+    pub color: TokenColor,
     pub signature: [u8; 96],
 }
 
@@ -94,6 +95,7 @@ mod test {
             from: 1.into(),
             nonce: 3,
             amount: 4,
+            color: TokenColor::Red,
             signature: [0u8; 96],
         })
     }
@@ -124,7 +126,9 @@ mod test {
             Account {
                 pubkey: PublicKey::zero(),
                 nonce: 3,
-                value: 0,
+                red_value: 0,
+                green_value: 0,
+                blue_value: 0,
             },
         );
         let mem = MockState::new(accounts);

@@ -41,7 +41,9 @@ pub fn random_accounts(n: usize, height: usize) -> Vec<AddressedAccount> {
             Account {
                 pubkey: PublicKey::new(pubkey),
                 nonce: rng.gen(),
-                value: rng.gen_range(1, 1000),
+                red_value: rng.gen_range(1, 1000),
+                green_value: rng.gen_range(1, 1000),
+                blue_value: rng.gen_range(1, 1000),
             },
         ));
 
@@ -68,7 +70,9 @@ mod test {
 
             assert_ne!(account.pubkey.as_bytes().to_vec(), [0u8; 48].to_vec());
             assert_ne!(account.nonce, 0);
-            assert_ne!(account.value, 0);
+            assert_ne!(account.red_value, 0);
+            assert_ne!(account.green_value, 0);
+            assert_ne!(account.blue_value, 0);
         }
     }
 }

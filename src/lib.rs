@@ -14,6 +14,7 @@ pub mod transaction;
 pub mod u264;
 
 use crate::process::process_transactions;
+use crate::state::TokenColor;
 use crate::transaction::{Transaction, Transfer};
 
 #[cfg(feature = "scout")]
@@ -70,7 +71,7 @@ pub fn process_data_blob(blob: &mut [u8], pre_state_root: &[u8; 32]) -> [u8; 32]
     let transactions = deserialize_transactions(&blob, tx_count);
 
     // Load multi-merkle proof
-    let mut mem = Imp::new(&mut blob[(4 + tx_count * 176)..], 256);
+    let mut mem = Imp::new(&mut blob[(4 + tx_count * 177)..], 256);
 
     // Verify pre_state_root
     let pre_root = mem.root();
@@ -86,16 +87,22 @@ pub fn deserialize_transactions(data: &[u8], tx_count: usize) -> Vec<Transaction
     unsafe {
         let mut ret = Vec::<Transaction>::new();
 
-        for i in (0..4 + (tx_count * 176)).skip(4).step_by(176) {
-            let mut buf = [0u8; 176];
-            buf.copy_from_slice(&data[i..(i + 176)]);
+        for i in (0..4 + (tx_count * 177)).skip(4).step_by(184) {
+            let mut buf = [0u8; 177];
+            buf.copy_from_slice(&data[i..(i + 177)]);
 
             let tx = Transaction::Transfer(Transfer {
                 to: (*array_ref![buf, 0, 32]).into(),
                 from: (*array_ref![buf, 32, 32]).into(),
                 nonce: u64::from_le_bytes(*array_ref![buf, 64, 8]),
                 amount: u64::from_le_bytes(*array_ref![buf, 72, 8]),
-                signature: *array_ref![buf, 80, 96],
+                color: match u8::from_le_bytes(*array_ref![buf, 80, 1]) {
+                    0 => TokenColor::Red,
+                    1 => TokenColor::Green,
+                    2 => TokenColor::Blue,
+                    _ => panic!("Unknown token color"),
+                },
+                signature: *array_ref![buf, 81, 96],
             });
 
             ret.push(tx);

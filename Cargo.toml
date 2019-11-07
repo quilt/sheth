@@ -26,7 +26,7 @@ debug = false
 arrayref = "0.3.5"
 bigint = "4.4.1"
 hex = "0.3.2"
-imp = "0.0.1"
+imp = "0.1.0"
 qimalloc = "0.1.0"
 sha2 = "0.8.0"
 

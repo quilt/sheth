@@ -1,7 +1,7 @@
 use crate::account::{calc_nonce_index, calc_value_index};
 use crate::address::Address;
 use crate::error::Error;
-use crate::state::State;
+use crate::state::{State, TokenColor};
 use crate::u264::U264;
 use arrayref::array_ref;
 use imp::Imp;
@@ -11,8 +11,8 @@ impl<'a> State for Imp<'a, U264> {
         Ok(self.root())
     }
 
-    fn value(&self, address: Address) -> Result<u64, Error> {
-        let index = calc_value_index(address, self.height);
+    fn value(&self, color: TokenColor, address: Address) -> Result<u64, Error> {
+        let index = calc_value_index(color, address, self.height);
         let chunk = self.get(index);
         Ok(u64::from_le_bytes(*array_ref![&chunk, 0, 8]))
     }
@@ -23,8 +23,13 @@ impl<'a> State for Imp<'a, U264> {
         Ok(u64::from_le_bytes(*array_ref![&chunk, 0, 8]))
     }
 
-    fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        let index = calc_value_index(address, self.height);
+    fn add_value(
+        &mut self,
+        color: TokenColor,
+        address: Address,
+        amount: u64,
+    ) -> Result<u64, Error> {
+        let index = calc_value_index(color, address, self.height);
         let chunk = self.get(index);
 
         let value = u64::from_le_bytes(*array_ref![&chunk, 0, 8]);
@@ -41,8 +46,13 @@ impl<'a> State for Imp<'a, U264> {
         Ok(value)
     }
 
-    fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
-        let index = calc_value_index(address, self.height);
+    fn sub_value(
+        &mut self,
+        color: TokenColor,
+        address: Address,
+        amount: u64,
+    ) -> Result<u64, Error> {
+        let index = calc_value_index(color, address, self.height);
         let chunk = self.get(index);
 
         let value = u64::from_le_bytes(*array_ref![chunk, 0, 8]);
@@ -96,19 +106,31 @@ mod test {
     }
 
     fn get_proof() -> Vec<u8> {
-        // indexes = [16, 17, 9, 10, 11, 3]
-        let offsets: Vec<u8> = vec![6, 5, 3, 2, 1, 1].iter().fold(vec![], |mut acc, x| {
-            let x = *x as u64;
-            acc.extend(&x.to_le_bytes());
-            acc
-        });
-
-        let proof: Vec<u8> = vec![h256(0), h256(0), h256(1), h256(1), zh(0), zh(0)]
+        // indexes = [16, 17, 9, 40, 41, 42, 43, 11, 3]
+        let offsets: Vec<u8> = vec![9, 8, 3, 2, 1, 4, 2, 1, 1]
             .iter()
             .fold(vec![], |mut acc, x| {
-                acc.extend(x);
+                let x = *x as u64;
+                acc.extend(&x.to_le_bytes());
                 acc
             });
+
+        let proof: Vec<u8> = vec![
+            h256(0),
+            h256(0),
+            h256(1), // nonce
+            h256(1), // red balance
+            h256(0), // green balance
+            h256(1), // blue balance
+            zh(0),   // padding
+            zh(0),   // padding
+            zh(0),
+        ]
+        .iter()
+        .fold(vec![], |mut acc, x| {
+            acc.extend(x);
+            acc
+        });
 
         let mut ret = offsets;
         ret.extend(proof);
@@ -119,27 +141,27 @@ mod test {
     #[test]
     fn add_value() {
         let mut proof = get_proof();
-        let mut mem = Imp::new(&mut proof, 1);
+        let mut mem = Imp::new(&mut proof, 5);
 
-        assert_eq!(mem.add_value(0.into(), 1), Ok(2));
-        assert_eq!(mem.get((10 << 1).into()), h256(2));
+        assert_eq!(mem.add_value(TokenColor::Red, 0.into(), 1), Ok(2));
+        assert_eq!(mem.get(40.into()), h256(2));
     }
 
     #[test]
     fn sub_value() {
         let mut proof = get_proof();
-        let mut mem = Imp::new(&mut proof, 1);
+        let mut mem = Imp::new(&mut proof, 5);
 
-        assert_eq!(mem.sub_value(0.into(), 1), Ok(0));
-        assert_eq!(mem.get((10 << 1).into()), h256(0));
+        assert_eq!(mem.sub_value(TokenColor::Blue, 0.into(), 1), Ok(0));
+        assert_eq!(mem.get(41.into()), h256(0));
     }
 
     #[test]
     fn inc_nonce() {
         let mut proof = get_proof();
-        let mut mem = Imp::new(&mut proof, 1);
+        let mut mem = Imp::new(&mut proof, 5);
 
         assert_eq!(mem.inc_nonce(0.into()), Ok(2));
-        assert_eq!(mem.get((9 << 1).into()), h256(2));
+        assert_eq!(mem.get((9 << 2).into()), h256(2));
     }
 }

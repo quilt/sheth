@@ -24,8 +24,8 @@ pub fn process_transactions<'a, T: State>(
 }
 
 fn transfer<'a, T: State>(db: &mut T, tx: &Transfer) -> Result<(), Error> {
-    db.sub_value(tx.from, tx.amount)?;
-    db.add_value(tx.to, tx.amount)?;
+    db.sub_value(tx.color, tx.from, tx.amount)?;
+    db.add_value(tx.color, tx.to, tx.amount)?;
 
     Ok(())
 }
@@ -38,6 +38,7 @@ mod test {
     use crate::address::Address;
     use crate::bls::PublicKey;
     use crate::state::MockState;
+    use crate::state::TokenColor;
     use crate::transaction::{Transaction, Transfer};
     use bigint::U256;
     use std::collections::BTreeMap;
@@ -49,7 +50,9 @@ mod test {
             Account {
                 pubkey: PublicKey::zero(),
                 nonce: 0,
-                value: 5,
+                red_value: 5,
+                blue_value: 0,
+                green_value: 0,
             },
         );
         accounts.insert(
@@ -57,7 +60,9 @@ mod test {
             Account {
                 pubkey: PublicKey::zero(),
                 nonce: 0,
-                value: 2,
+                red_value: 2,
+                blue_value: 0,
+                green_value: 0,
             },
         );
 
@@ -72,6 +77,7 @@ mod test {
                 from: U256::from(0).into(),
                 nonce: 0,
                 amount: 2,
+                color: TokenColor::Red,
                 signature: [0; 96],
             }),
             Transaction::Transfer(Transfer {
@@ -79,6 +85,7 @@ mod test {
                 from: U256::from(0).into(),
                 nonce: 1,
                 amount: 3,
+                color: TokenColor::Red,
                 signature: [0; 96],
             }),
             Transaction::Transfer(Transfer {
@@ -86,6 +93,7 @@ mod test {
                 from: U256::from(1).into(),
                 nonce: 0,
                 amount: 5,
+                color: TokenColor::Red,
                 signature: [0; 96],
             }),
         ];
@@ -97,12 +105,12 @@ mod test {
         let post_root = mem.root().unwrap();
 
         assert_eq!(
-            "000000000000000000000000000000000000000000000000babe8b8a8d142623",
+            "0000000000000000000000000000000000000000000000009dc492172af59378",
             hex::encode(pre_root)
         );
 
         assert_eq!(
-            "0000000000000000000000000000000000000000000000003265323fcea3d6a2",
+            "000000000000000000000000000000000000000000000000c8709c5e456c7ef6",
             hex::encode(post_root)
         );
     }

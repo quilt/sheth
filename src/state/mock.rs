@@ -2,7 +2,7 @@ use crate::account::Account;
 use crate::address::Address;
 use crate::error::Error;
 use crate::hash::H256;
-use crate::state::State;
+use crate::state::{State, TokenColor};
 use bigint::U256;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
@@ -26,12 +26,17 @@ impl State for MockState {
         Ok(hash.into())
     }
 
-    fn value(&self, address: Address) -> Result<u64, Error> {
-        let value = self
+    fn value(&self, color: TokenColor, address: Address) -> Result<u64, Error> {
+        let account = self
             .accounts
             .get(&address)
-            .ok_or(Error::StateIncomplete(address.into()))?
-            .value;
+            .ok_or(Error::StateIncomplete(address.into()))?;
+
+        let value = match color {
+            TokenColor::Red => account.red_value,
+            TokenColor::Blue => account.blue_value,
+            TokenColor::Green => account.green_value,
+        };
 
         Ok(value)
     }
@@ -46,30 +51,68 @@ impl State for MockState {
         Ok(nonce)
     }
 
-    fn add_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
+    fn add_value(
+        &mut self,
+        color: TokenColor,
+        address: Address,
+        amount: u64,
+    ) -> Result<u64, Error> {
         let mut account = self
             .accounts
             .get(&address)
             .ok_or(Error::StateIncomplete(address.into()))?
             .clone();
 
-        account.value += amount;
+        let value = match color {
+            TokenColor::Red => {
+                account.red_value += amount;
+                account.red_value
+            }
+            TokenColor::Blue => {
+                account.blue_value += amount;
+                account.blue_value
+            }
+            TokenColor::Green => {
+                account.green_value += amount;
+                account.green_value
+            }
+        };
+
         self.accounts.insert(address, account.clone());
 
-        Ok(account.value)
+        Ok(value)
     }
 
-    fn sub_value(&mut self, address: Address, amount: u64) -> Result<u64, Error> {
+    fn sub_value(
+        &mut self,
+        color: TokenColor,
+        address: Address,
+        amount: u64,
+    ) -> Result<u64, Error> {
         let mut account = self
             .accounts
             .get(&address)
             .ok_or(Error::StateIncomplete(address.into()))?
             .clone();
 
-        account.value -= amount;
+        let value = match color {
+            TokenColor::Red => {
+                account.red_value -= amount;
+                account.red_value
+            }
+            TokenColor::Blue => {
+                account.blue_value -= amount;
+                account.blue_value
+            }
+            TokenColor::Green => {
+                account.green_value -= amount;
+                account.green_value
+            }
+        };
+
         self.accounts.insert(address, account.clone());
 
-        Ok(account.value)
+        Ok(value)
     }
 
     fn inc_nonce(&mut self, address: Address) -> Result<u64, Error> {

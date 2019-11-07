@@ -36,10 +36,12 @@ pub fn init_multiproof(accounts: Vec<AddressedAccount>, height: usize) -> HashMa
         let index = (U512::one() << height) + U512::from(address);
 
         // Copy the values of the account into a buffer
-        let mut buf = [0u8; 128];
+        let mut buf = [0u8; 192];
         buf[0..48].copy_from_slice(&account.pubkey.as_bytes());
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
-        buf[96..104].copy_from_slice(&account.value.to_le_bytes());
+        buf[96..104].copy_from_slice(&account.red_value.to_le_bytes());
+        buf[128..136].copy_from_slice(&account.green_value.to_le_bytes());
+        buf[160..166].copy_from_slice(&account.blue_value.to_le_bytes());
 
         // Insert children nodes of the account, where structure looks like:
         map.insert(index << 3, H256::new(array_ref![buf, 0, 32]));
