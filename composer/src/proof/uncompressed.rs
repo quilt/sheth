@@ -41,13 +41,21 @@ pub fn init_multiproof(accounts: Vec<AddressedAccount>, height: usize) -> HashMa
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
         buf[96..104].copy_from_slice(&account.red_value.to_le_bytes());
         buf[128..136].copy_from_slice(&account.green_value.to_le_bytes());
-        buf[160..166].copy_from_slice(&account.blue_value.to_le_bytes());
+        buf[160..168].copy_from_slice(&account.blue_value.to_le_bytes());
 
         // Insert children nodes of the account, where structure looks like:
         map.insert(index << 3, H256::new(array_ref![buf, 0, 32]));
         map.insert((index << 3) + 1.into(), H256::new(array_ref![buf, 32, 32]));
         map.insert((index << 2) + 1.into(), H256::new(array_ref![buf, 64, 32]));
-        map.insert((index << 2) + 2.into(), H256::new(array_ref![buf, 96, 32]));
+
+        map.insert((index << 4) + 8.into(), H256::new(array_ref![buf, 96, 32]));
+        map.insert((index << 4) + 9.into(), H256::new(array_ref![buf, 128, 32]));
+        map.insert(
+            (index << 4) + 10.into(),
+            H256::new(array_ref![buf, 160, 32]),
+        );
+        map.insert((index << 4) + 11.into(), H256::new(&[0u8; 32]));
+
         map.insert((index << 2) + 3.into(), H256::new(&[0u8; 32]));
     }
 
@@ -68,36 +76,46 @@ fn fill_proof(map: &mut HashMap<U512, H256>, height: usize) -> Vec<U512> {
         let right = left + 1.into();
         let parent = left / 2.into();
 
-        if !map.contains_key(&parent) {
-            let left = get_or_generate(
-                map,
-                &mut proof_indexes,
-                height,
-                left,
-                indexes[position].bits(),
-            );
+        let (left, found_left) = get_or_generate(
+            map,
+            &mut proof_indexes,
+            height,
+            left,
+            indexes[position].bits(),
+        );
 
-            let right = get_or_generate(
-                map,
-                &mut proof_indexes,
-                height,
-                right,
-                indexes[position].bits(),
-            );
+        let (right, found_right) = get_or_generate(
+            map,
+            &mut proof_indexes,
+            height,
+            right,
+            indexes[position].bits(),
+        );
 
-            // Calculate hash
-            let mut buf = [0u8; 64];
-            buf[0..32].copy_from_slice(left.as_bytes());
-            buf[32..64].copy_from_slice(right.as_bytes());
-            hash(&mut buf);
+        // Calculate hash
+        let mut buf = [0u8; 64];
+        buf[0..32].copy_from_slice(left.as_bytes());
+        buf[32..64].copy_from_slice(right.as_bytes());
+        hash(&mut buf);
 
-            // Insert hash to map
-            map.insert(parent, H256::new(array_ref![buf, 0, 32]));
+        // Insert hash to map
+        map.insert(parent, H256::new(array_ref![buf, 0, 32]));
 
-            // Push parent index to calculate next level
-            indexes.push(parent);
+        // Push parent index to calculate next level
+        indexes.push(parent);
+
+        // If the left and right children are found, the parent should not be the proof
+        if found_left && found_right {
+            match proof_indexes.iter().position(|&i| i == parent) {
+                Some(pos) => {
+                    proof_indexes.remove(pos);
+                }
+                None => (),
+            };
         }
 
+        indexes.sort();
+        indexes.reverse();
         position += 1;
     }
 
@@ -110,16 +128,16 @@ fn get_or_generate(
     height: usize,
     index: U512,
     zero_bits: usize,
-) -> H256 {
+) -> (H256, bool) {
     match map.get(&index) {
-        Some(x) => x.clone(),
+        Some(x) => (x.clone(), true),
         None => {
             let mut buf = [0u8; 64];
             zh(height + 1 - zero_bits, &mut buf);
             let buf = H256::new(array_ref![buf, 0, 32]);
             proof_indexes.push(index);
             map.insert(index, buf.clone());
-            buf
+            (buf, false)
         }
     }
 }
@@ -152,13 +170,17 @@ mod test {
         let account = Account {
             pubkey: PublicKey::one(),
             nonce: 123,
-            value: 42,
+            red_value: 42,
+            green_value: 0,
+            blue_value: 0,
         };
 
-        let mut buf = [0u8; 128];
+        let mut buf = [0u8; 192];
         buf[0..48].copy_from_slice(&account.pubkey.as_bytes());
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
-        buf[96..104].copy_from_slice(&account.value.to_le_bytes());
+        buf[96..104].copy_from_slice(&account.red_value.to_le_bytes());
+        buf[128..136].copy_from_slice(&account.green_value.to_le_bytes());
+        buf[160..168].copy_from_slice(&account.blue_value.to_le_bytes());
 
         assert_eq!(
             generate(vec![AddressedAccount(0.into(), account.clone())], 1),
@@ -167,7 +189,10 @@ mod test {
                     16.into(),
                     17.into(),
                     9.into(),
-                    10.into(),
+                    40.into(),
+                    41.into(),
+                    42.into(),
+                    43.into(),
                     11.into(),
                     3.into()
                 ],
@@ -176,6 +201,9 @@ mod test {
                     H256::new(array_ref![buf, 32, 32]),
                     H256::new(array_ref![buf, 64, 32]),
                     H256::new(array_ref![buf, 96, 32]),
+                    H256::new(array_ref![buf, 128, 32]),
+                    H256::new(array_ref![buf, 160, 32]),
+                    H256::new(&[0u8; 32]),
                     H256::new(&[0u8; 32]),
                     zh(0),
                 ]
@@ -190,7 +218,10 @@ mod test {
                     24.into(),
                     25.into(),
                     13.into(),
-                    14.into(),
+                    56.into(),
+                    57.into(),
+                    58.into(),
+                    59.into(),
                     15.into()
                 ],
                 values: vec![
@@ -199,6 +230,9 @@ mod test {
                     H256::new(array_ref![buf, 32, 32]),
                     H256::new(array_ref![buf, 64, 32]),
                     H256::new(array_ref![buf, 96, 32]),
+                    H256::new(array_ref![buf, 128, 32]),
+                    H256::new(array_ref![buf, 160, 32]),
+                    H256::new(&[0u8; 32]),
                     H256::new(&[0u8; 32]),
                 ]
             }
@@ -233,13 +267,17 @@ mod test {
         let account = Account {
             pubkey: PublicKey::one(),
             nonce: 42,
-            value: 123,
+            red_value: 123,
+            green_value: 0,
+            blue_value: 0,
         };
 
-        let mut buf = [0u8; 128];
+        let mut buf = [0u8; 192];
         buf[0..48].copy_from_slice(&account.pubkey.as_bytes());
         buf[64..72].copy_from_slice(&account.nonce.to_le_bytes());
-        buf[96..104].copy_from_slice(&account.value.to_le_bytes());
+        buf[96..104].copy_from_slice(&account.red_value.to_le_bytes());
+        buf[128..136].copy_from_slice(&account.green_value.to_le_bytes());
+        buf[160..168].copy_from_slice(&account.blue_value.to_le_bytes());
 
         assert_eq!(
             generate(vec![AddressedAccount(9.into(), account.clone())], 4),
@@ -250,7 +288,10 @@ mod test {
                     200.into(),
                     201.into(),
                     101.into(),
-                    102.into(),
+                    408.into(),
+                    409.into(),
+                    410.into(),
+                    411.into(),
                     103.into(),
                     13.into(),
                     7.into(),
@@ -262,6 +303,9 @@ mod test {
                     H256::new(array_ref![buf, 32, 32]),
                     H256::new(array_ref![buf, 64, 32]),
                     H256::new(array_ref![buf, 96, 32]),
+                    H256::new(array_ref![buf, 128, 32]),
+                    H256::new(array_ref![buf, 160, 32]),
+                    H256::new(&[0u8; 32]),
                     H256::new(&[0u8; 32]),
                     zh(1),
                     zh(2),

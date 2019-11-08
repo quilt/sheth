@@ -4,7 +4,7 @@ use composer::accounts::AddressedAccount;
 use composer::transactions::serialize;
 use imp::Imp;
 use sheth::process::process_transactions;
-use sheth::state::State;
+use sheth::state::{State, TokenColor};
 use sheth::transaction::{Transaction, Transfer};
 use sheth::u264::U264;
 use std::collections::HashMap;
@@ -40,7 +40,7 @@ pub struct AccountsCmd();
 impl BalanceCmd {
     pub fn execute(&self, db: &Imp<U264>) -> Result<(), Error> {
         let value = db
-            .value(self.address.into())
+            .value(TokenColor::Red, self.address.into())
             .map_err(|_| Error::AddressUnknown("".to_string()))?;
 
         println!("Balance is: {}", value);
@@ -60,6 +60,7 @@ impl TransferCmd {
             from: self.from.into(),
             nonce,
             amount: self.amount,
+            color: TokenColor::Red,
             signature: [0u8; 96],
         });
 
