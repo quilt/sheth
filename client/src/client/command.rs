@@ -121,7 +121,7 @@ mod test {
             #[allow(unused_mut)]
             let mut $blob_name = blob::generate($accounts_expr, 0, $tree_height);
             #[allow(unused_mut)]
-            let mut $db_name = Imp::<U264>::new(&mut $blob_name.proof, $tree_height);
+            let mut $db_name = Imp::<U264>::new(&mut $blob_name.proof, $tree_height + 3);
         };
     }
 
