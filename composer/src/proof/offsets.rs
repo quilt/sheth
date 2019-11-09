@@ -9,9 +9,9 @@ pub fn calculate(indexes: Vec<U512>) -> Vec<u64> {
 
     // Convert indexes into arrays of bits
     for index in indexes.clone() {
-        let mut bits = vec![0u8; 260];
-        for i in 0..260 {
-            bits[260 - i - 1] = index.bit(i) as u8;
+        let mut bits = vec![0u8; 261];
+        for i in 0..261 {
+            bits[261 - i - 1] = index.bit(i) as u8;
         }
 
         raw_indexes.push(bits);
