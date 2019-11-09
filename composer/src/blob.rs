@@ -57,7 +57,7 @@ pub fn generate_with_roots(
     let mut blob = generate(accounts, transactions, tree_height);
     let ret_blob = blob.clone();
 
-    let mut mem = Imp::<U264>::new(&mut blob.proof, tree_height);
+    let mut mem = Imp::<U264>::new(&mut blob.proof, tree_height + 3);
 
     let pre_state = mem.root();
     assert_eq!(process_transactions(&mut mem, &blob.transactions), Ok(()));
@@ -94,7 +94,7 @@ mod test {
         ];
 
         assert_eq!(generate(1, 0, 1).to_bytes(), proof);
-        let mut mem = Imp::<U264>::new(&mut proof[4..], 1);
+        let mut mem = Imp::<U264>::new(&mut proof[4..], 4);
         assert_eq!(mem.root(), *array_ref![root, 0, 32]);
     }
 }

@@ -119,7 +119,7 @@ mod test {
     #[test]
     fn add_value() {
         let mut proof = get_proof();
-        let mut mem = Imp::new(&mut proof, 1);
+        let mut mem = Imp::new(&mut proof, 4);
 
         assert_eq!(mem.add_value(0.into(), 1), Ok(2));
         assert_eq!(mem.get((10 << 1).into()), h256(2));
@@ -128,7 +128,7 @@ mod test {
     #[test]
     fn sub_value() {
         let mut proof = get_proof();
-        let mut mem = Imp::new(&mut proof, 1);
+        let mut mem = Imp::new(&mut proof, 4);
 
         assert_eq!(mem.sub_value(0.into(), 1), Ok(0));
         assert_eq!(mem.get((10 << 1).into()), h256(0));
@@ -137,7 +137,7 @@ mod test {
     #[test]
     fn inc_nonce() {
         let mut proof = get_proof();
-        let mut mem = Imp::new(&mut proof, 1);
+        let mut mem = Imp::new(&mut proof, 4);
 
         assert_eq!(mem.inc_nonce(0.into()), Ok(2));
         assert_eq!(mem.get((9 << 1).into()), h256(2));

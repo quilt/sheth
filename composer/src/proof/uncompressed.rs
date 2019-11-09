@@ -96,6 +96,8 @@ fn fill_proof(map: &mut HashMap<U512, H256>, height: usize) -> Vec<U512> {
             indexes.push(parent);
         }
 
+        indexes.sort();
+        indexes.reverse();
         position += 1;
     }
 
