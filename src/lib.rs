@@ -70,7 +70,7 @@ pub fn process_data_blob(blob: &mut [u8], pre_state_root: &[u8; 32]) -> [u8; 32]
     let transactions = deserialize_transactions(&blob, tx_count);
 
     // Load multi-merkle proof
-    let mut mem = Imp::new(&mut blob[(4 + tx_count * 176)..], 256);
+    let mut mem = Imp::new(&mut blob[(4 + tx_count * 176)..], 259);
 
     // Verify pre_state_root
     let pre_root = mem.root();
