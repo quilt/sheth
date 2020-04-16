@@ -37,7 +37,7 @@ related concepts. If you're lost, here are a few places to get started:
 * [Phase 2 Proposal](https://notes.ethereum.org/w1Pn2iMmSTqCmVUTGV4T5A?view#Implementing-in-shard-ETH-transfers)
 * [Eth EE Proposal](https://ethresear.ch/t/eth-execution-environment-proposal/5507)
 
-Ping me [@matt_garnett](https://twitter.com/matt_garnett) for any
+Ping me [@lightclients](https://twitter.com/lightclients) for any
 other questions / concerns.
 
 ## Motivation
